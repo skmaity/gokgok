@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:gokgok/features/dash_board/dash_board.dart';
+import 'package:gokgok/core/theme/app_colors.dart';
+import 'package:gokgok/core/theme/app_sizes.dart';
+import 'package:gokgok/features/dash_board/pages/dash_board.dart';
 import 'package:gokgok/features/splash/bloc/splash_bloc.dart';
 import 'package:gokgok/features/splash/bloc/splash_event.dart';
 import 'package:gokgok/features/splash/bloc/splash_state.dart';
@@ -14,11 +15,45 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _firstGokFade;
+  late final Animation<double> _secondGokFade;
+
   @override
   void initState() {
     super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+
+    _firstGokFade = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.25, curve: Curves.easeIn),
+    );
+
+    _secondGokFade = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.25, 0.6, curve: Curves.easeIn),
+    );
+
+    _controller.forward();
     context.read<SplashBloc>().add(SplashMoveToNextPage());
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  TextStyle _logoStyle() {
+    return GoogleFonts.lobster(
+      fontSize: AppSizes.logoLarge,
+      color: AppColors.splashLime,
+    );
   }
 
   @override
@@ -33,19 +68,24 @@ class _SplashScreenState extends State<SplashScreen> {
       },
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: Colors.amber,
+          backgroundColor: AppColors.background,
           body: SafeArea(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              padding: EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        "GokGok",
-                        style: GoogleFonts.indieFlower(fontSize: 50.sp),
+                      FadeTransition(
+                        opacity: _firstGokFade,
+                        child: Text("Gok", style: _logoStyle()),
+                      ),
+
+                      FadeTransition(
+                        opacity: _secondGokFade,
+                        child: Text("Gok", style: _logoStyle()),
                       ),
                     ],
                   ),

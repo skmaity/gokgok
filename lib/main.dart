@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gokgok/core/theme/app_colors.dart';
+import 'package:gokgok/features/loginsignup/pages/signup_page.dart';
 import 'package:gokgok/features/splash/bloc/splash_bloc.dart';
-import 'package:gokgok/features/splash/pages/splash_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,13 +23,17 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
-              fontFamily: 'storyscript',
+              textTheme: GoogleFonts.fredokaTextTheme(),
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: AppColors.primaryPink,
+              ),
+
+              // fontFamily: 'storyscript',
             ),
             home: child,
           );
         },
-        child: SplashScreen(),
+        child: SignupPage(),
       ),
     );
   }
