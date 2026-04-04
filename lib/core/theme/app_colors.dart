@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
+  static const Color signupBoxBorder = Colors.white;
+
   static const Color background = Colors.black;
   static const Color primaryPink = Color(0xffFF3CAC);
   static const Color splashLime = Colors.lime;

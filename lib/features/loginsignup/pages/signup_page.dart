@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
@@ -16,8 +14,6 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
-    final glassRadius = BorderRadius.circular(AppSizes.radiusFull);
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -38,62 +34,53 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                 ],
               ),
+              AppSizes.m.verticalSpace,
 
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    height: 200.h,
-                    width: 65.w,
-                    decoration: BoxDecoration(
-                      borderRadius: glassRadius,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primaryPink.withAlpha(90),
-                          blurRadius: 50,
-                          spreadRadius: 8,
-                        ),
-                        BoxShadow(
-                          color: Colors.white.withAlpha(35),
-                          blurRadius: 24,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
+              ClipPath(
+                clipper: CustomClipPath(),
+                child: Container(
+                  height: 400.h,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                    // border: Border.all(
+                    //   width: 0.5.w,
+                    //   color: AppColors.signupBoxBorder,
+                    // ),
                   ),
-                  ClipRRect(
-                    borderRadius: glassRadius,
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-                      child: Container(
-                        height: 200.h,
-                        width: 65.w,
-                        decoration: BoxDecoration(
-                          borderRadius: glassRadius,
-                          border: Border.all(
-                            color: Colors.white.withAlpha(90),
-                            width: 1.2,
-                          ),
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Colors.white.withAlpha(80),
-                              AppColors.primaryPink.withAlpha(70),
-                              Colors.white.withAlpha(25),
-                            ],
-                          ),
-                        ),
-                        child: Column(children: []),
-                      ),
-                    ),
+                  child: Column(children: [
+                      
+                    ],
                   ),
-                ],
+                ),
               ),
             ],
           ),
         ),
       ),
     );
+  }
+}
+
+class CustomClipPath extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    double h = size.height;
+    double w = size.width;
+
+    Path path = Path();
+    path.moveTo(0, h * 0.2);
+    path.lineTo(w * 0.5, 0);
+    path.lineTo(w, h * 0.2);
+    path.lineTo(w, h);
+    path.lineTo(0, h);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
+    return false;
   }
 }

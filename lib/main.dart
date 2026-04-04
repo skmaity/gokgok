@@ -27,7 +27,6 @@ class MyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSeed(
                 seedColor: AppColors.primaryPink,
               ),
-
               // fontFamily: 'storyscript',
             ),
             home: child,
