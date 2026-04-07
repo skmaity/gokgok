@@ -30,7 +30,6 @@ class _SignupPageState extends State<SignupPage> {
 
   void _handleDragEnd(DragEndDetails details) {
     setState(() {
-      // Snap to ends
       if (_dragPosition > 0.5) {
         _dragPosition = 1.0;
         _isToggled = true;
@@ -69,17 +68,16 @@ class _SignupPageState extends State<SignupPage> {
               AppSizes.m.verticalSpace,
               LayoutBuilder(
                 builder: (context, constraints) {
-                  double w = constraints.maxWidth;
                   double h = boxHeight.h;
-                  double notchTop = h * 0.5;
-                  double notchBottom = h * 0.9;
-                  double buttonHeight = 50.h;
-                  double notchDepth = 45.w;
+                  double notchTop = h * 0.6;
+                  double notchBottom = h * 0.88;
+                  double buttonHeight = 70.h;
+                  double notchDepth = 27.9.w;
 
-                  // Calculate vertical offset: 
-                  // At 0.0, top is (notchBottom - buttonHeight)
-                  // At 1.0, top is notchTop
-                  double currentTop = notchBottom - buttonHeight - (_dragPosition * (notchBottom - notchTop - buttonHeight));
+                  double currentTop =
+                      notchBottom -
+                      buttonHeight -
+                      (_dragPosition * (notchBottom - notchTop - buttonHeight));
 
                   return Stack(
                     children: [
@@ -96,22 +94,56 @@ class _SignupPageState extends State<SignupPage> {
                         top: currentTop,
                         right: 0,
                         child: GestureDetector(
-                          onVerticalDragUpdate: (details) => _handleDragUpdate(details, h),
+                          onVerticalDragUpdate: (details) =>
+                              _handleDragUpdate(details, h),
                           onVerticalDragEnd: _handleDragEnd,
                           child: Container(
                             width: notchDepth,
                             height: buttonHeight,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryPink,
+                              color: AppColors.splashLime,
+
                               borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(notchDepth),
                                 bottomLeft: Radius.circular(notchDepth),
                               ),
                             ),
-                            // child: Icon(
-                            //   _isToggled ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                            //   color: Colors.white,
-                            // ),
+                          ),
+                        ),
+                      ),
+
+                      Form(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSizes.m,
+                            vertical: AppSizes.l,
+                          ),
+                          child: Column(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(color: Colors.white),
+                                child: TextFormField(
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                      ),
+                                    ),
+                                    focusColor: Colors.transparent,
+                                    enabledBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -135,30 +167,30 @@ class SignupBoxPainter extends CustomPainter {
     double r = 30.r;
 
     // Notch calculations
-    double notchDepth = 45.w; // Sync with widget
-    double notchTop = h * 0.5;
+    double notchDepth = 35.w; // Sync with widget
+    double notchTop = h * 0.58;
     double notchBottom = h * 0.9;
 
     Paint paint = Paint()
-      ..color = AppColors.primaryPink
+      ..color = AppColors.avatarBorder
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.w
       ..strokeJoin = StrokeJoin.round
       ..strokeCap = StrokeCap.round;
 
     Path path = Path();
-    
+
     // Start bottom left (after the corner curve)
     path.moveTo(0, h - r);
-    
+
     // Left side & Top-left corner
     path.lineTo(0, r);
     path.arcToPoint(Offset(r, 0), radius: Radius.circular(r));
-    
+
     // Top side & Top-right corner
     path.lineTo(w - r, 0);
     path.arcToPoint(Offset(w, r), radius: Radius.circular(r));
-    
+
     // Right side down to notch - The "Pocket"
     path.lineTo(w, notchTop);
     path.arcToPoint(
@@ -167,12 +199,16 @@ class SignupBoxPainter extends CustomPainter {
       clockwise: false,
     );
     path.lineTo(w - notchDepth, notchBottom - notchDepth);
-    path.arcToPoint(Offset(w, notchBottom), radius: Radius.circular(notchDepth), clockwise: false);
-    
+    path.arcToPoint(
+      Offset(w, notchBottom),
+      radius: Radius.circular(notchDepth),
+      clockwise: false,
+    );
+
     // Right side down to Bottom-right corner
     path.lineTo(w, h - r);
     path.arcToPoint(Offset(w - r, h), radius: Radius.circular(r));
-    
+
     // Bottom side & Bottom-left corner
     path.lineTo(r, h);
     path.arcToPoint(Offset(0, h - r), radius: Radius.circular(r));
