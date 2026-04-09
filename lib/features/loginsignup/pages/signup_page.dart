@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gokgok/common/widgets/custom_text_form_field.dart';
 import 'package:gokgok/common/widgets/submit_button.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
@@ -85,16 +86,19 @@ class _SignupPageState extends State<SignupPage>
       ..forward();
   }
 
-  void _onSignUp() {
-    if (_signUpFormKey.currentState?.validate() ?? false) {
-      debugPrint('Sign up → username: ${_signUpUsernameCtrl.text}');
-    }
+  void _onSignUp(BuildContext context) {
+    // if (_signUpFormKey.currentState?.validate() ?? false) {
+    //   debugPrint('Sign up → username: ${_signUpUsernameCtrl.text}');
+    // }
+    context.go("/dashboard");
   }
 
   void _onLogin() {
-    if (_loginFormKey.currentState?.validate() ?? false) {
-      debugPrint('Login → username: ${_loginUsernameCtrl.text}');
-    }
+    // if (_loginFormKey.currentState?.validate() ?? false) {
+    //   debugPrint('Login → username: ${_loginUsernameCtrl.text}');
+    // }
+    context.go("/dashboard");
+
   }
 
   String? _validateUsername(String? value) {
@@ -195,7 +199,7 @@ class _SignupPageState extends State<SignupPage>
                                         horizontal: AppSizes.m,
                                         vertical: AppSizes.l,
                                       ),
-                                      child: _SignUpForm(
+                                      child: _SignUpForm( 
                                         formKey: _signUpFormKey,
                                         usernameCtrl: _signUpUsernameCtrl,
                                         passwordCtrl: _signUpPasswordCtrl,
@@ -203,7 +207,9 @@ class _SignupPageState extends State<SignupPage>
                                         passwordFocus: _signUpPasswordFocus,
                                         validateUsername: _validateUsername,
                                         validatePassword: _validatePassword,
-                                        onSubmit: _onSignUp,
+                                        onSubmit: (){
+_onSignUp(context);
+                                        } 
                                       ),
                                     ),
                                   ),
@@ -226,7 +232,7 @@ class _SignupPageState extends State<SignupPage>
                             width: notchDepth,
                             height: buttonHeight,
                             decoration: BoxDecoration(
-                              color: AppColors.splashLime,
+                              color: Colors.brown,
                               borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(notchDepth),
                                 bottomLeft: Radius.circular(notchDepth),
@@ -392,7 +398,7 @@ class _LoginForm extends StatelessWidget {
             ],
           ),
           AppSizes.m.verticalSpace,
-          CustomTextFormField(
+          CustomTextFormField( 
             hintText: 'username',
             controller: usernameCtrl,
             focusNode: usernameFocus,
