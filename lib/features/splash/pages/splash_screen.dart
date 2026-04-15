@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
 import 'package:gokgok/features/dash_board/pages/dash_board.dart';
-import 'package:gokgok/features/splash/bloc/splash_bloc.dart';
-import 'package:gokgok/features/splash/bloc/splash_event.dart';
-import 'package:gokgok/features/splash/bloc/splash_state.dart';
+import 'package:gokgok/features/splash/providers/splash_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _firstGokFade;
@@ -40,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _controller.forward();
-    context.read<SplashBloc>().add(SplashMoveToNextPage());
+    ref.read(splashProvider.notifier).moveToNextPage();
   }
 
   @override
@@ -58,43 +56,39 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<SplashBloc, SplashState>(
-      listener: (context, state) {
-        if (state is SplashScreenFinish && mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const DashBoard()),
-          );
-        }
-      },
-      builder: (context, state) {
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          body: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
-              child: Column(
+    ref.listen(splashProvider, (previous, next) {
+      if (next == SplashStatus.finish && mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const DashBoard()),
+        );
+      }
+    });
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      FadeTransition(
-                        opacity: _firstGokFade,
-                        child: Text("Gok", style: _logoStyle()),
-                      ),
-
-                      FadeTransition(
-                        opacity: _secondGokFade,
-                        child: Text("Gok", style: _logoStyle()),
-                      ),
-                    ],
+                  FadeTransition(
+                    opacity: _firstGokFade,
+                    child: Text("Gok", style: _logoStyle()),
+                  ),
+                  FadeTransition(
+                    opacity: _secondGokFade,
+                    child: Text("Gok", style: _logoStyle()),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

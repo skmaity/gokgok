@@ -2,8 +2,11 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gokgok/core/constants/app_assets.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
+import 'package:gokgok/features/dash_board/widgets/bottom_nav_bar.dart';
+import 'package:gokgok/features/dash_board/widgets/online_now_list.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class DashBoard extends StatefulWidget {
@@ -77,7 +80,7 @@ class _DashBoardState extends State<DashBoard> {
                             width: AppSizes.avatarSize,
                             child: Center(
                               child: Image(
-                                image: AssetImage("assets/images/download.jpg"),
+                                image: AssetImage(AppAssets.profilePlaceholder),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -115,138 +118,30 @@ class _DashBoardState extends State<DashBoard> {
                     ),
                     AppSizes.m.verticalSpace,
 
-                    // --- UPDATED SECTION STARTS HERE ---
-                    // Online Profiles List
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(140),
-                        borderRadius: BorderRadius.circular(
-                          AppSizes.radiusSmall,
+                    // Online Now section
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Online now",
+                          style: TextStyle(
+                            color: AppColors.dashboardOffWhite,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primaryPink.withAlpha(20),
-                            blurRadius: 15,
-                            offset: Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // List Header "Online Now"
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: AppSizes.m,
-                              vertical: AppSizes.s / 2,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Online now",
-                                  style: TextStyle(
-                                    color: Colors.grey.withAlpha(140),
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                // Optional: Scroll indicator icon for the list below
-                                // Icon(Icons.chevron_down_rounded, size: 18),
-                              ],
-                            ),
-                          ),
-
-                          // The List of Dummy Profiles
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: 4, // Number of dummy profiles to show
-                            separatorBuilder: (context, index) =>
-                                AppSizes.s.verticalSpace,
-                            itemBuilder: (context, index) {
-                              return Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  // Profile Image Container with Gradient Border
-                                  Padding(
-                                    padding: EdgeInsets.all(2.5.w),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            AppColors.primaryPink,
-                                            AppColors.accentOrange,
-                                          ],
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.primaryPink
-                                                .withAlpha(90),
-                                            blurRadius: 20,
-                                            offset: Offset(0, 10),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: AppColors.avatarBorder,
-                                            width: 1.5,
-                                          ),
-                                          image: DecorationImage(
-                                            image: AssetImage(
-                                              "assets/images/download.jpg",
-                                            ),
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  // Online Status Dot (Absolute Positioning)
-                                  Positioned(
-                                    right: 1.w,
-                                    bottom: 1.h,
-                                    child: Container(
-                                      height: 16.w,
-                                      width: 16.w,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Color(0xFF34D399), // Green
-                                        border: Border.all(
-                                          color: AppColors.background,
-                                          width: 3,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Color(
-                                              0xFF34D399,
-                                            ).withAlpha(120),
-                                            blurRadius: 10,
-                                            spreadRadius: 1,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ],
-                      ),
+                        AppSizes.s.verticalSpace,
+                        OnlineNowList(),
+                        AppSizes.s.verticalSpace,
+                      ],
                     ),
-
-                    // --- UPDATED SECTION ENDS HERE ---
                   ],
                 ),
               ),
             ),
+
+            // bottom nav bar
+            Positioned(bottom: 10, right: 0, left: 0, child: BottomNavBar()),
           ],
         ),
       ),
