@@ -36,9 +36,7 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
             textTheme: GoogleFonts.fredokaTextTheme(),
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: AppColors.primaryPink,
-            ),
+            colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primaryPink),
           ),
         );
       },
