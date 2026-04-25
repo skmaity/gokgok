@@ -6,7 +6,7 @@ class AppColors {
   static const Color signupBoxBorder = Colors.white;
 
   static Color dashboardOffWhite = Colors.white.withAlpha(200);
-  static Color navbarBgColor = Colors.white.withAlpha(150);
+  static Color navbarBgColor = Colors.white.withAlpha(100);
 
   static const Color background = Colors.black;
   static const Color primaryPink = Color(0xffFF3CAC);

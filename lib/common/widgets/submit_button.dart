@@ -7,11 +7,13 @@ import 'package:google_fonts/google_fonts.dart';
 class SubmitButton extends StatefulWidget {
   final String label;
   final VoidCallback onPressed;
+  final bool isLoading;
 
   const SubmitButton({
     super.key,
     required this.label,
     required this.onPressed,
+    this.isLoading = false,
   });
 
   @override
@@ -23,6 +25,26 @@ class _SubmitButtonState extends State<SubmitButton> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isLoading) {
+      return Container(
+        height: 48.h,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          border: Border.all(color: AppColors.primaryPink, width: 1.5.w),
+        ),
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: 20.w,
+          height: 20.w,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.primaryPink,
+          ),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {

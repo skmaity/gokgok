@@ -1,20 +1,23 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gokgok/core/constants/app_assets.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
+import 'package:gokgok/features/dash_board/providers/buzzer_provider.dart';
+import 'package:gokgok/features/dash_board/providers/navbar_provider.dart';
 
-class BottomNavBar extends StatefulWidget {
+class BottomNavBar extends ConsumerStatefulWidget {
   const BottomNavBar({super.key});
 
   @override
-  State<BottomNavBar> createState() => _BottomNavBarState();
+  ConsumerState<BottomNavBar> createState() => _BottomNavBarState();
 }
 
-class _BottomNavBarState extends State<BottomNavBar> {
-  int _selectedIndex = 0;
+class _BottomNavBarState extends ConsumerState<BottomNavBar> {
+  // int _selectedIndex = 0;
 
   final List<_NavBarItemData> _items = const [
     _NavBarItemData(title: 'Home', svgPath: AppAssets.homeSmile),
@@ -24,67 +27,108 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Row(
-        children: [
-          AppSizes.l.horizontalSpace,
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadiusGeometry.circular(100),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+    final selectedIndex = ref.read(navbarProvider.notifier).state;
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16.h),
+      child: SafeArea(
+        child: Row(
+          children: [
+            AppSizes.l.horizontalSpace,
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  ref.read(buzzerProvider.notifier).buzzerClear();
+                },
                 child: Container(
-                  decoration: BoxDecoration(color: AppColors.navbarBgColor),
-                  height: 65.h,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: AppSizes.l),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        for (var i = 0; i < _items.length; i++)
-                          _navbarItem(
-                            title: _items[i].title,
-                            svgPath: _items[i].svgPath,
-                            isActive: _selectedIndex == i,
-                            onTap: () => _handleItemTap(i),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadiusGeometry.circular(100),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(30),
+                        blurRadius: 10,
+                        spreadRadius: 3,
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadiusGeometry.circular(100),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.navbarBgColor,
+                        ),
+                        height: 65.h,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: AppSizes.l),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              for (var i = 0; i < _items.length; i++)
+                                _navbarItem(
+                                  title: _items[i].title,
+                                  svgPath: _items[i].svgPath,
+                                  isActive: selectedIndex == i,
+                                  onTap: () => _handleItemTap(i),
+                                ),
+                            ],
                           ),
-                      ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          AppSizes.m.horizontalSpace,
-          ClipRRect(
-            borderRadius: BorderRadiusGeometry.circular(100),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            AppSizes.m.horizontalSpace,
+            GestureDetector(
+              onTap: () async {
+                ref.read(buzzerProvider.notifier).buzzerPressed();
+                // await Supabase.instance.client.from("test").insert({
+                //   'test_data': "shubha test data",
+                // });
+              },
               child: Container(
-                decoration: BoxDecoration(color: AppColors.navbarBgColor),
-                height: 65.h,
-                width: 65.w,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [SvgPicture.asset(AppAssets.soundWaveIcon)],
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadiusGeometry.circular(100),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(30),
+                      blurRadius: 10,
+                      spreadRadius: 3,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadiusGeometry.circular(100),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      decoration: BoxDecoration(color: AppColors.navbarBgColor),
+                      height: 65.h,
+                      width: 65.w,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [SvgPicture.asset(AppAssets.soundWaveIcon)],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          AppSizes.l.horizontalSpace,
-        ],
+            AppSizes.l.horizontalSpace,
+          ],
+        ),
       ),
     );
   }
 
   void _handleItemTap(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    ref.read(navbarProvider.notifier).state = index;
   }
 
   Widget _navbarItem({
