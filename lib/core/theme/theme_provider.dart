@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
-import 'package:gokgok/core/theme/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:riverpod/legacy.dart';
 
 final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeData>((ref) {
@@ -8,18 +8,21 @@ final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeData>((ref) {
 });
 
 class ThemeNotifier extends StateNotifier<ThemeData> {
-  ThemeNotifier() : super(ThemeData(
-    useMaterial3: true,
-    scaffoldBackgroundColor: AppTheme.sunSetBgColor,
-    textTheme: AppTheme.sunSetTextTheme,
-    extensions: const [AppColors.sunset],
-  ));
+  ThemeNotifier()
+    : super(
+        ThemeData(
+          useMaterial3: true,
+          scaffoldBackgroundColor: Color(0xfffff9ef),
+          textTheme: GoogleFonts.fredokaTextTheme(),
+          extensions: const [AppColors.sunset],
+        ),
+      );
 
   void switchToSunsetTheme() {
     state = ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: AppTheme.sunSetBgColor,
-      textTheme: AppTheme.sunSetTextTheme,
+      scaffoldBackgroundColor: Color(0xfffff9ef),
+      textTheme: GoogleFonts.fredokaTextTheme(),
       extensions: const [AppColors.sunset],
     );
   }
@@ -27,8 +30,8 @@ class ThemeNotifier extends StateNotifier<ThemeData> {
   void switchToMintTheme() {
     state = ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: AppTheme.mintBgColor,
-      textTheme: AppTheme.mintTextTheme,
+      scaffoldBackgroundColor: Color(0xffffffff),
+      textTheme: GoogleFonts.playwriteAuQldTextTheme(),
       extensions: const [AppColors.mint],
     );
   }

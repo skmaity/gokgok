@@ -6,7 +6,9 @@ class AppSizes {
   // Base spacing scale
   static double get xs => 4.w;
   static double get s => 8.w;
+  static double get sm => 10.w;
   static double get m => 16.w;
+  static double get ml => 18.w;
   static double get l => 24.w;
   static double get xl => 32.w;
   static double get xxl => 40.w;

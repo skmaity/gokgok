@@ -46,7 +46,7 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
                     borderRadius: BorderRadiusGeometry.circular(100),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withAlpha(15),
+                        color: Colors.black.withAlpha(20),
                         blurRadius: 8,
                         spreadRadius: 2,
                         offset: Offset(4, 3),
@@ -98,7 +98,7 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
                   borderRadius: BorderRadiusGeometry.circular(100),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(15),
+                      color: Colors.black.withAlpha(20),
                       blurRadius: 8,
                       spreadRadius: 2,
                       offset: Offset(4, 3),
