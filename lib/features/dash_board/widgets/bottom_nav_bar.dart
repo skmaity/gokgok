@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gokgok/core/constants/app_assets.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
+
 import 'package:gokgok/features/dash_board/providers/buzzer_provider.dart';
 import 'package:gokgok/features/dash_board/providers/navbar_provider.dart';
 
@@ -27,7 +28,8 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = ref.read(navbarProvider.notifier).state;
+    final selectedIndex = ref.watch(navbarProvider);
+    print('nab bar build');
     return Padding(
       padding: EdgeInsets.only(bottom: 16.h),
       child: SafeArea(
@@ -44,9 +46,10 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
                     borderRadius: BorderRadiusGeometry.circular(100),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withAlpha(30),
-                        blurRadius: 10,
-                        spreadRadius: 3,
+                        color: Colors.black.withAlpha(15),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                        offset: Offset(4, 3),
                       ),
                     ],
                   ),
@@ -56,7 +59,9 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
                       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppColors.navbarBgColor,
+                          color: Theme.of(
+                            context,
+                          ).extension<AppColors>()!.navbarBg.withAlpha(150),
                         ),
                         height: 65.h,
                         child: Padding(
@@ -93,9 +98,10 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
                   borderRadius: BorderRadiusGeometry.circular(100),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(30),
-                      blurRadius: 10,
-                      spreadRadius: 3,
+                      color: Colors.black.withAlpha(15),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                      offset: Offset(4, 3),
                     ),
                   ],
                 ),
@@ -104,7 +110,11 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
-                      decoration: BoxDecoration(color: AppColors.navbarBgColor),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).extension<AppColors>()!.navbarBg.withAlpha(150),
+                      ),
                       height: 65.h,
                       width: 65.w,
                       child: Padding(
@@ -138,7 +148,7 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
     required VoidCallback onTap,
   }) {
     final Color itemColor = isActive
-        ? Colors.white
+        ? Theme.of(context).extension<AppColors>()!.highlight
         : Colors.black.withAlpha(140);
 
     return InkWell(

@@ -35,10 +35,7 @@ class OnlineNowList extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            AppColors.primaryPink,
-                            AppColors.accentOrange,
-                          ],
+                          colors: [Colors.red, Colors.orange],
                         ),
                       ),
                       child: Container(
@@ -72,10 +69,7 @@ class OnlineNowList extends StatelessWidget {
               AppSizes.xs.verticalSpace,
               Text(
                 "User ${index + 1}",
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  color: AppColors.dashboardOffWhite,
-                ),
+                style: TextStyle(fontSize: 11.sp, color: Colors.black),
                 overflow: TextOverflow.ellipsis,
               ),
             ],

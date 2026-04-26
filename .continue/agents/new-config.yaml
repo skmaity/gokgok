@@ -1,0 +1,71 @@
+name: Flutter Continue Config
+
+models:
+
+context:
+  - provider: code
+  - provider: docs
+  - provider: diff
+  - provider: terminal
+  - provider: problems
+  - provider: folder
+
+slashCommands:
+  - name: flutter-widget
+    description: Generate Flutter widgets using best practices
+    prompt: |
+      You are a senior Flutter developer.
+      Follow these rules:
+      - Use clean architecture
+      - Use Riverpod unless otherwise specified
+      - Prefer stateless widgets
+      - Use const constructors
+      - Follow Flutter lints
+      - Separate UI, logic, and models
+      - Optimize rebuilds
+      - Ensure null safety
+      Generate production-ready Flutter code only.
+
+  - name: flutter-fix
+    description: Fix Flutter/Dart issues
+    prompt: |
+      You are an expert Flutter engineer.
+      Analyze the provided code and:
+      - Fix errors
+      - Improve performance
+      - Follow Dart style guide
+      - Maintain existing architecture
+      - Avoid unnecessary package additions
+
+  - name: flutter-refactor
+    description: Refactor Flutter code
+    prompt: |
+      Refactor this Flutter code for:
+      - Better readability
+      - Reusability
+      - Performance
+      - State management best practices
+      - Proper folder structure
+
+rules:
+  - Always use Flutter stable APIs
+  - Prefer Material 3
+  - Use responsive layouts
+  - Use ThemeData instead of hardcoded styles
+  - Avoid modifying user-facing strings unless explicitly asked
+  - Preserve routes and navigation logic unless requested
+  - Keep imports organized
+  - Follow pubspec dependency constraints
+  - Use extension methods where appropriate
+  - Ensure Android + iOS compatibility
+
+tabAutocompleteModel:
+  title: GPT-4o
+  provider: openai
+  model: gpt-4o
+  apiKey: YOUR_OPENAI_API_KEY
+
+embeddingsProvider:
+  provider: openai
+  model: text-embedding-3-small
+  apiKey: YOUR_OPENAI_API_KEY

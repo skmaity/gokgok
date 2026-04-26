@@ -11,4 +11,5 @@ class AppAssets {
   static const String settingsIcon =
       '$_svgPath/settings-minimalistic-svgrepo-com.svg';
   static const String soundWaveIcon = '$_svgPath/sound-wave-svgrepo-com.svg';
+  static const String infoSquare = '$_svgPath/info-square.svg';
 }

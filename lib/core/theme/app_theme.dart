@@ -15,4 +15,5 @@ class AppTheme {
   static Color sunSetHeightLightColor = Color(0xffe85d4a);
   static Color sunSetSecendaryHeightLightColor = Color(0xff7d6bc4);
   static TextTheme? sunSetTextTheme = GoogleFonts.fredokaTextTheme();
+  static Color sunSetNavbarBgColor = Color(0xfffff9ef);
 }

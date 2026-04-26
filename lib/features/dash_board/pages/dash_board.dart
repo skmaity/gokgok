@@ -18,7 +18,7 @@ class _DashBoardState extends ConsumerState<DashBoard> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = ref.read(navbarProvider.notifier).state;
+    final selectedIndex = ref.watch(navbarProvider);
 
     return Scaffold(
       extendBody: true,

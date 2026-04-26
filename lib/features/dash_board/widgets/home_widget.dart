@@ -31,7 +31,7 @@ class HomeWidget extends StatelessWidget {
                     'GokGok',
                     style: GoogleFonts.lobster(
                       fontSize: AppSizes.logoMedium,
-                      color: AppColors.primaryPink,
+                      color: Theme.of(context).extension<AppColors>()!.logoColor,
                     ),
                   ),
 
@@ -71,7 +71,7 @@ class HomeWidget extends StatelessWidget {
               // body (Search bar)
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(140),
+                  color: Theme.of(context).extension<AppColors>()!.searchBarBg,
                   borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                 ),
                 child: Row(
@@ -102,7 +102,7 @@ class HomeWidget extends StatelessWidget {
                   Text(
                     "Online now",
                     style: TextStyle(
-                      color: AppColors.dashboardOffWhite,
+                      color: Colors.black,
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
                     ),
@@ -117,7 +117,7 @@ class HomeWidget extends StatelessWidget {
                       return Text(
                         buzzer,
                         style: TextStyle(
-                          color: AppColors.dashboardOffWhite,
+                          color: Colors.black,
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
                         ),
