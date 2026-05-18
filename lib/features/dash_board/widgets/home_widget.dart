@@ -4,25 +4,31 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gokgok/core/constants/app_assets.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
-import 'package:gokgok/features/dash_board/providers/buzzer_provider.dart';
-import 'package:gokgok/features/dash_board/widgets/log_out_bottom_drawer.dart';
-import 'package:gokgok/features/dash_board/widgets/online_now_list.dart';
+import 'package:gokgok/features/dash_board/providers/group_provider.dart';
+import 'package:gokgok/features/dash_board/widgets/empty_state_no_friends_groups.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class HomeWidget extends StatelessWidget {
+class HomeWidget extends ConsumerStatefulWidget {
   const HomeWidget({super.key});
 
+  @override
+  ConsumerState<HomeWidget> createState() => _HomeWidgetState();
+}
+
+class _HomeWidgetState extends ConsumerState<HomeWidget> {
+  // var group =  ref.watch(groupProvider.notifier).
   @override
   Widget build(BuildContext context) {
     TextEditingController searchController = TextEditingController();
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: SafeArea(
+      child: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
           child: Column(
             children: [
+              MediaQuery.of(context).viewPadding.top.verticalSpace,
               // header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -31,24 +37,11 @@ class HomeWidget extends StatelessWidget {
                     'GokGok',
                     style: GoogleFonts.lobster(
                       fontSize: AppSizes.logoMedium,
-                      color: Theme.of(context).extension<AppColors>()!.logoColor,
+                      color: Colors.amber,
                     ),
                   ),
 
                   GestureDetector(
-                    onTap: () {
-                      showModalBottomSheet(
-                        backgroundColor: Colors.transparent,
-                        isDismissible: false,
-                        useSafeArea: true,
-                        context: context,
-                        builder: (context) {
-                          return SafeArea(
-                            child: LogOutBottomDrawer(context: context),
-                          );
-                        },
-                      );
-                    },
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(
                         AppSizes.radiusCircular,
@@ -71,6 +64,14 @@ class HomeWidget extends StatelessWidget {
               // body (Search bar)
               Container(
                 decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(20),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                      offset: Offset(4, 3),
+                    ),
+                  ],
                   color: Theme.of(context).extension<AppColors>()!.searchBarBg,
                   borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                 ),
@@ -95,37 +96,46 @@ class HomeWidget extends StatelessWidget {
               ),
               AppSizes.m.verticalSpace,
 
-              // Online Now section
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Online now",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  AppSizes.s.verticalSpace,
-                  OnlineNowList(),
-                  AppSizes.s.verticalSpace,
-
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final buzzer = ref.watch(buzzerProvider);
-                      return Text(
-                        buzzer,
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      );
-                    },
-                  ),
-                ],
+              // Empty state
+              ref.watch(groupProvider).when(
+                loading: () => const CircularProgressIndicator(),
+                error: (e, _) => Text('Error: $e'),
+                data: (groups) =>
+                    groups.isEmpty ? EmptyStateNoFriendsGroups() : const SizedBox.shrink(),
               ),
+
+              // Or embed inside your existing Scaffold body
+              // Online Now section
+              // Column(
+              //   crossAxisAlignment: CrossAxisAlignment.start,
+              //   children: [
+              //     Text(
+              //       "Online now",
+              //       style: TextStyle(
+              //         color: Colors.black,
+              //         fontSize: 14.sp,
+              //         fontWeight: FontWeight.w600,
+              //       ),
+              //     ),
+              //     AppSizes.s.verticalSpace,
+              //     OnlineNowList(),
+              //     AppSizes.s.verticalSpace,
+
+              //     Consumer(
+              //       builder: (context, ref, child) {
+              //         final buzzer = ref.watch(buzzerProvider);
+              //         return Text(
+              //           buzzer,
+              //           style: TextStyle(
+              //             color: Colors.black,
+              //             fontSize: 14.sp,
+              //             fontWeight: FontWeight.w600,
+              //           ),
+              //         );
+              //       },
+              //     ),
+              //   ],
+              // ),
             ],
           ),
         ),

@@ -7,7 +7,11 @@ final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeData>((ref) {
   return ThemeNotifier();
 });
 
+enum AppTheme { sunset, mint }
+
 class ThemeNotifier extends StateNotifier<ThemeData> {
+  AppTheme currentTheme = AppTheme.sunset;
+
   ThemeNotifier()
     : super(
         ThemeData(
@@ -19,6 +23,7 @@ class ThemeNotifier extends StateNotifier<ThemeData> {
       );
 
   void switchToSunsetTheme() {
+    currentTheme = AppTheme.sunset;
     state = ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: Color(0xfffff9ef),
@@ -28,10 +33,11 @@ class ThemeNotifier extends StateNotifier<ThemeData> {
   }
 
   void switchToMintTheme() {
+    currentTheme = AppTheme.mint;
     state = ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: Color(0xffffffff),
-      textTheme: GoogleFonts.playwriteAuQldTextTheme(),
+      textTheme: GoogleFonts.fredokaTextTheme(),
       extensions: const [AppColors.mint],
     );
   }

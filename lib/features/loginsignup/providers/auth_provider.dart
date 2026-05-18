@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -34,7 +35,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final response = await _client.auth.signUp(
         email: email.trim(),
         password: password,
-        data: {'test_key': 'test_data'},
+        // data: {'test_key': 'test_data'},
       );
       if (response.user != null) {
         state = const AuthSuccess();
@@ -66,7 +67,20 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> logout() async {
     try {
       await _client.auth.signOut();
-    } catch (e) {}
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint(e.toString());
+      }
+    }
+  }
+
+  User getCurrentUser() {
+    final user = _client.auth.currentSession?.user;
+    if (user == null) {
+      logout();
+      throw AuthException('No authenticated user.');
+    }
+    return user;
   }
 
   void reset() => state = const AuthIdle();

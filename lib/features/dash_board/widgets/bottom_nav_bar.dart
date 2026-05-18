@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -18,18 +19,21 @@ class BottomNavBar extends ConsumerStatefulWidget {
 }
 
 class _BottomNavBarState extends ConsumerState<BottomNavBar> {
-  // int _selectedIndex = 0;
-
   final List<_NavBarItemData> _items = const [
     _NavBarItemData(title: 'Home', svgPath: AppAssets.homeSmile),
-    _NavBarItemData(title: 'Add', svgPath: AppAssets.addIcon),
+    _NavBarItemData(title: 'Chat', svgPath: AppAssets.cahtRound),
+    _NavBarItemData(title: 'Sounds', svgPath: AppAssets.sound),
     _NavBarItemData(title: 'Settings', svgPath: AppAssets.settingsIcon),
   ];
 
   @override
   Widget build(BuildContext context) {
+    if (kDebugMode) {
+      debugPrint('nab bar build');
+    }
     final selectedIndex = ref.watch(navbarProvider);
-    print('nab bar build');
+    final navbarBg = Theme.of(context).extension<AppColors>()!.navbarBg;
+
     return Padding(
       padding: EdgeInsets.only(bottom: 16.h),
       child: SafeArea(
@@ -43,6 +47,7 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white, width: 1),
                     borderRadius: BorderRadiusGeometry.circular(100),
                     boxShadow: [
                       BoxShadow(
@@ -56,12 +61,10 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
                   child: ClipRRect(
                     borderRadius: BorderRadiusGeometry.circular(100),
                     child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).extension<AppColors>()!.navbarBg.withAlpha(150),
+                          color: navbarBg.withAlpha(150),
                         ),
                         height: 65.h,
                         child: Padding(
@@ -89,12 +92,10 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
             GestureDetector(
               onTap: () async {
                 ref.read(buzzerProvider.notifier).buzzerPressed();
-                // await Supabase.instance.client.from("test").insert({
-                //   'test_data': "shubha test data",
-                // });
               },
               child: Container(
                 decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white, width: 1),
                   borderRadius: BorderRadiusGeometry.circular(100),
                   boxShadow: [
                     BoxShadow(
@@ -110,11 +111,7 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).extension<AppColors>()!.navbarBg.withAlpha(150),
-                      ),
+                      decoration: BoxDecoration(color: navbarBg.withAlpha(150)),
                       height: 65.h,
                       width: 65.w,
                       child: Padding(
@@ -157,12 +154,7 @@ class _BottomNavBarState extends ConsumerState<BottomNavBar> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: EdgeInsets.symmetric(vertical: 8.h),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18.r),
-          // color: isActive
-          //     ? AppColors.primaryPink.withAlpha(26)
-          //     : Colors.transparent,
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(18.r)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
-const _buzzerAssetPath = 'assets/mp3/thetestdata-sample-mp3-6.mp3';
-const _buzzerAssetPath1 =
-    "https://previous-tomato-7gkqixkdo1.edgeone.app/thetestdata-sample-mp3-6.mp3";
+// const _buzzerAssetPath = 'assets/mp3/thetestdata-sample-mp3-6.mp3';
+// const _buzzerAssetPath1 =
+//     "https://previous-tomato-7gkqixkdo1.edgeone.app/thetestdata-sample-mp3-6.mp3";
 
 final buzzerProvider = NotifierProvider<BuzzerNotifier, String>(
   BuzzerNotifier.new,

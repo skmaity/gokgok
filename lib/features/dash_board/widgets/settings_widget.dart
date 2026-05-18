@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gokgok/core/theme/theme_provider.dart';
+import 'package:gokgok/features/dash_board/widgets/log_out_bottom_drawer.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
@@ -34,11 +35,9 @@ class SettingsWidget extends ConsumerWidget {
           AppSizes.l.verticalSpace,
           Padding(
             padding: EdgeInsets.symmetric(vertical: AppSizes.m),
-            child: Container(
-              height: 200.h,
-              color: Colors.blue.withOpacity(0.2),
-            ),
+            child: Container(height: 200.h, color: Colors.blue.withAlpha(65)),
           ),
+
           section('Theme'),
           AppSizes.sm.verticalSpace,
           Row(
@@ -51,14 +50,23 @@ class SettingsWidget extends ConsumerWidget {
               AppSizes.l.horizontalSpace,
             ],
           ),
-          AppSizes.l.verticalSpace,
-          section('Options'),
-
-          settingsItem(svgIconPath: AppAssets.homeSmile, title: "Home"),
+          AppSizes.m.verticalSpace,
+          // section('Options'),
+          settingsItem(
+            svgIconPath: AppAssets.homeSmile,
+            title: "Home",
+            context: context,
+          ),
           settingsItem(
             svgIconPath: AppAssets.infoSquare,
             title: "About Us",
+            context: context,
+          ),
+          settingsItem(
+            svgIconPath: AppAssets.logoutIcon,
+            title: "Log out",
             isLast: true,
+            context: context,
           ),
           AppSizes.xl.verticalSpace,
           FutureBuilder<PackageInfo>(
@@ -96,6 +104,9 @@ Widget themeCardSunSet(BuildContext context, WidgetRef ref) {
       // height: 80,
       padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
+        border: ref.read(themeProvider.notifier).currentTheme == AppTheme.sunset
+            ? Border.all(color: Color(0xffe85d4a), width: 1)
+            : null,
         borderRadius: BorderRadius.circular(18),
         color: Theme.of(context).extension<AppColors>()!.navbarBg,
         boxShadow: [
@@ -169,6 +180,9 @@ Widget themeCardMint(BuildContext context, WidgetRef ref) {
       // height: 80,
       padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
+        border: ref.read(themeProvider.notifier).currentTheme == AppTheme.mint
+            ? Border.all(color: Color(0xff06d6a0), width: 1)
+            : null,
         borderRadius: BorderRadius.circular(18),
         color: Theme.of(context).extension<AppColors>()!.navbarBg,
         boxShadow: [
@@ -248,41 +262,59 @@ Widget settingsItem({
   required String svgIconPath,
   required String title,
   bool? isLast,
+  required BuildContext context,
 }) {
-  return Padding(
-    padding: EdgeInsets.symmetric(horizontal: 24.w),
-    child: Container(
-      decoration: BoxDecoration(
-        border: !(isLast != null && isLast == true)
-            ? Border(
-                bottom: BorderSide(color: Colors.grey.withAlpha(80), width: 1),
-              )
-            : null,
-      ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSizes.l),
-        child: Row(
-          children: [
-            Row(
-              children: [
-                SvgPicture.asset(
-                  height: 24,
-                  svgIconPath,
-                  colorFilter: ColorFilter.mode(
-                    Colors.black87,
-                    BlendMode.srcIn,
+  return GestureDetector(
+    onTap: () {
+      showModalBottomSheet(
+        // barrierColor: Colors.transparent,
+        backgroundColor: Colors.transparent,
+        isDismissible: false,
+        useSafeArea: true,
+        context: context,
+        builder: (context) {
+          return SafeArea(child: LogOutBottomDrawer(context: context));
+        },
+      );
+    },
+    child: Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: Container(
+        decoration: BoxDecoration(
+          border: !(isLast != null && isLast == true)
+              ? Border(
+                  bottom: BorderSide(
+                    color: Colors.grey.withAlpha(80),
+                    width: 1,
                   ),
-                ),
-                AppSizes.m.horizontalSpace,
-                Text(
-                  title,
-                  style: TextStyle(color: Colors.black87, fontSize: 14.sp),
-                ),
-              ],
-            ),
-            Spacer(),
-            Icon(Icons.arrow_forward_ios_rounded, size: 14),
-          ],
+                )
+              : null,
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: AppSizes.l),
+          child: Row(
+            children: [
+              Row(
+                children: [
+                  SvgPicture.asset(
+                    height: 24,
+                    svgIconPath,
+                    colorFilter: ColorFilter.mode(
+                      Colors.black87,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  AppSizes.m.horizontalSpace,
+                  Text(
+                    title,
+                    style: TextStyle(color: Colors.black87, fontSize: 14.sp),
+                  ),
+                ],
+              ),
+              Spacer(),
+              Icon(Icons.arrow_forward_ios_rounded, size: 14),
+            ],
+          ),
         ),
       ),
     ),

@@ -19,9 +19,12 @@ class LogOutBottomDrawer extends ConsumerWidget {
           height: 150,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(60),
+            color: Colors.white,
 
-            borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(AppSizes.radiusLarge),
+              topRight: Radius.circular(AppSizes.radiusLarge),
+            ),
           ),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -40,7 +43,7 @@ class LogOutBottomDrawer extends ConsumerWidget {
                         child: Container(
                           height: 60,
                           decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(100),
+                            color: Colors.red.withAlpha(100),
                             borderRadius: BorderRadius.circular(
                               AppSizes.radiusFull,
                             ),
@@ -50,6 +53,7 @@ class LogOutBottomDrawer extends ConsumerWidget {
                             child: Text(
                               'Logout?',
                               style: TextStyle(
+                                fontSize: 16,
                                 color: Colors.white.withAlpha(255),
                               ),
                             ),
@@ -57,14 +61,14 @@ class LogOutBottomDrawer extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    AppSizes.l.horizontalSpace,
+                    AppSizes.s.horizontalSpace,
                     GestureDetector(
                       onTap: context.pop,
                       child: Container(
                         height: 60,
                         width: 80,
                         decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(100),
+                          color: Colors.blueAccent.withAlpha(100),
                           borderRadius: BorderRadius.circular(
                             AppSizes.radiusFull,
                           ),
@@ -73,6 +77,7 @@ class LogOutBottomDrawer extends ConsumerWidget {
                           child: Text(
                             'No',
                             style: TextStyle(
+                              fontSize: 16,
                               color: Colors.white.withAlpha(255),
                             ),
                           ),
