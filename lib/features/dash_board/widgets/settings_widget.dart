@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gokgok/core/theme/theme_provider.dart';
 import 'package:gokgok/features/dash_board/widgets/log_out_bottom_drawer.dart';
+import 'package:gokgok/features/dash_board/widgets/top_header_widget_title_only.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gokgok/core/constants/app_assets.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
-// import 'package:gokgok/core/theme/theme_provider.dart';
 
 class SettingsWidget extends ConsumerWidget {
   const SettingsWidget({super.key});
@@ -20,19 +20,9 @@ class SettingsWidget extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           MediaQuery.of(context).viewPadding.top.verticalSpace,
-          AppSizes.s.verticalSpace,
-          Row(
-            children: [
-              AppSizes.l.horizontalSpace,
 
-              Text(
-                "Settings",
-                style: TextStyle(fontSize: 25.sp, fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-
-          AppSizes.l.verticalSpace,
+          TopHeaderWidgetTitleOnly(title: 'Settings', padding: 24.w),
+          AppSizes.sm.verticalSpace,
           Padding(
             padding: EdgeInsets.symmetric(vertical: AppSizes.m),
             child: Container(height: 200.h, color: Colors.blue.withAlpha(65)),
@@ -88,6 +78,8 @@ class SettingsWidget extends ConsumerWidget {
               );
             },
           ),
+
+          200.verticalSpace,
         ],
       ),
     );

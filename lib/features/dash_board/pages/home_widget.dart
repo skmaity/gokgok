@@ -4,8 +4,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gokgok/core/constants/app_assets.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
-import 'package:gokgok/features/dash_board/providers/group_provider.dart';
 import 'package:gokgok/features/dash_board/widgets/empty_state_no_friends_groups.dart';
+import 'package:gokgok/features/dash_board/providers/group_provider.dart';
+import 'package:gokgok/features/dash_board/widgets/create_group_bottom_sheet.dart';
+import 'package:gokgok/features/dash_board/widgets/join_group_bottom_sheet.dart';
+import 'package:gokgok/features/dash_board/widgets/your_groups_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HomeWidget extends ConsumerStatefulWidget {
@@ -13,6 +16,84 @@ class HomeWidget extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<HomeWidget> createState() => _HomeWidgetState();
+}
+
+class _ActionCard extends StatelessWidget {
+  const _ActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Function()? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final highlight = Theme.of(context).extension<AppColors>()!.highlight;
+    final cardBg = Theme.of(context).extension<AppColors>()!.searchBarBg;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSizes.m,
+          vertical: AppSizes.m,
+        ),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(20),
+              blurRadius: 8,
+              spreadRadius: 2,
+              offset: Offset(4, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(AppSizes.s),
+              decoration: BoxDecoration(
+                color: highlight.withAlpha(30),
+                borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+              ),
+              child: Icon(
+                icon,
+                color: highlight,
+                size: AppSizes.iconSizeMedium,
+              ),
+            ),
+            AppSizes.s.horizontalSpace,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _HomeWidgetState extends ConsumerState<HomeWidget> {
@@ -95,14 +176,39 @@ class _HomeWidgetState extends ConsumerState<HomeWidget> {
                 ),
               ),
               AppSizes.m.verticalSpace,
+              Row(
+                children: [
+                  Expanded(
+                    child: _ActionCard(
+                      icon: Icons.add_rounded,
+                      title: 'new group',
+                      subtitle: 'start a squad',
+                      onTap: () => showCreateGroupSheet(context),
+                    ),
+                  ),
+                  AppSizes.s.horizontalSpace,
+                  Expanded(
+                    child: _ActionCard(
+                      icon: Icons.tag_rounded,
+                      title: 'join with code',
+                      subtitle: 'got an invite?',
+                      onTap: () => showJoinGroupSheet(context),
+                    ),
+                  ),
+                ],
+              ),
+              AppSizes.m.verticalSpace,
 
               // Empty state
-              ref.watch(groupProvider).when(
-                loading: () => const CircularProgressIndicator(),
-                error: (e, _) => Text('Error: $e'),
-                data: (groups) =>
-                    groups.isEmpty ? EmptyStateNoFriendsGroups() : const SizedBox.shrink(),
-              ),
+              ref
+                  .watch(groupProvider)
+                  .when(
+                    loading: () => const CircularProgressIndicator(),
+                    error: (e, _) => Text('Error: $e'),
+                    data: (groups) => groups.isEmpty
+                        ? EmptyStateNoFriendsGroups()
+                        : YourGroupsWidget(),
+                  ),
 
               // Or embed inside your existing Scaffold body
               // Online Now section

@@ -7,6 +7,7 @@ import 'package:gokgok/core/constants/app_assets.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
 import 'package:gokgok/features/dash_board/providers/group_provider.dart';
+import 'package:gokgok/features/dash_board/widgets/join_group_bottom_sheet.dart';
 
 class EmptyStateNoFriendsGroups extends ConsumerStatefulWidget {
   const EmptyStateNoFriendsGroups({super.key});
@@ -18,7 +19,6 @@ class EmptyStateNoFriendsGroups extends ConsumerStatefulWidget {
 
 class _EmptyStateNoFriendsGroupsState
     extends ConsumerState<EmptyStateNoFriendsGroups> {
-  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -36,11 +36,7 @@ class _EmptyStateNoFriendsGroupsState
         AppSizes.l.verticalSpace,
         CommounSubmitBtn(
           label: 'Join Group',
-          onPressed: () {
-            isLoading = !isLoading;
-            setState(() {});
-          },
-          isLoading: isLoading,
+          onPressed: () => showJoinGroupSheet(context),
         ),
         4.verticalSpace,
         Row(
