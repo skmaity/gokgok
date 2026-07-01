@@ -1,0 +1,314 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gokgok/core/theme/theme_provider.dart';
+import 'package:gokgok/features/dashboard/presentation/widgets/log_out_bottom_drawer.dart';
+import 'package:gokgok/features/dashboard/presentation/widgets/top_header_widget_title_only.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:gokgok/core/constants/app_assets.dart';
+import 'package:gokgok/core/theme/app_colors.dart';
+import 'package:gokgok/core/theme/app_sizes.dart';
+
+class SettingsWidget extends ConsumerWidget {
+  const SettingsWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          MediaQuery.of(context).viewPadding.top.verticalSpace,
+
+          TopHeaderWidgetTitleOnly(title: 'Settings', padding: 24.w),
+          AppSizes.sm.verticalSpace,
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSizes.m),
+            child: Container(height: 200.h, color: Colors.blue.withAlpha(65)),
+          ),
+
+          section('Theme'),
+          AppSizes.sm.verticalSpace,
+          Row(
+            children: [
+              AppSizes.l.horizontalSpace,
+              Expanded(child: themeCardMint(context, ref)),
+              AppSizes.m.horizontalSpace,
+
+              Expanded(child: themeCardSunSet(context, ref)),
+              AppSizes.l.horizontalSpace,
+            ],
+          ),
+          AppSizes.m.verticalSpace,
+          // section('Options'),
+          settingsItem(
+            svgIconPath: AppAssets.homeSmile,
+            title: "Home",
+            context: context,
+          ),
+          settingsItem(
+            svgIconPath: AppAssets.infoSquare,
+            title: "About Us",
+            context: context,
+          ),
+          settingsItem(
+            svgIconPath: AppAssets.logoutIcon,
+            title: "Log out",
+            isLast: true,
+            context: context,
+          ),
+          AppSizes.xl.verticalSpace,
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              final version = snapshot.data?.version ?? '—';
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "App Version $version",
+                    style: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).extension<AppColors>()!.highlight,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+
+          200.verticalSpace,
+        ],
+      ),
+    );
+  }
+}
+
+Widget themeCardSunSet(BuildContext context, WidgetRef ref) {
+  return GestureDetector(
+    onTap: () {
+      ref.read(themeProvider.notifier).switchToSunsetTheme();
+    },
+    child: Container(
+      // width: 100,
+      // height: 80,
+      padding: EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        border: ref.read(themeProvider.notifier).currentTheme == AppTheme.sunset
+            ? Border.all(color: Color(0xffe85d4a), width: 1)
+            : null,
+        borderRadius: BorderRadius.circular(18),
+        color: Theme.of(context).extension<AppColors>()!.navbarBg,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(20),
+            blurRadius: 8,
+            spreadRadius: 2,
+            offset: Offset(4, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                height: 24.h,
+                width: 24.w,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Color(0xffe8e8df)),
+                  color: Color(0xfffbf3e8),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              6.horizontalSpace,
+              Container(
+                height: 24.h,
+                width: 24.w,
+                decoration: BoxDecoration(
+                  color: Color(0xffe85d4a),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              6.horizontalSpace,
+              Container(
+                height: 24.h,
+                width: 24.w,
+                decoration: BoxDecoration(
+                  color: Color(0xffe85d4a),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ],
+          ),
+          AppSizes.s.verticalSpace,
+          Row(
+            children: [Text("SunSet", style: TextStyle(fontSize: AppSizes.m))],
+          ),
+          Row(
+            children: [
+              Text(
+                "warm + cozy",
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget themeCardMint(BuildContext context, WidgetRef ref) {
+  return GestureDetector(
+    onTap: () {
+      ref.read(themeProvider.notifier).switchToMintTheme();
+    },
+    child: Container(
+      // width: 100,
+      // height: 80,
+      padding: EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        border: ref.read(themeProvider.notifier).currentTheme == AppTheme.mint
+            ? Border.all(color: Color(0xff06d6a0), width: 1)
+            : null,
+        borderRadius: BorderRadius.circular(18),
+        color: Theme.of(context).extension<AppColors>()!.navbarBg,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(20),
+            blurRadius: 8,
+            spreadRadius: 2,
+            offset: Offset(4, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                height: 24.h,
+                width: 24.w,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Color(0xffe8e8df)),
+                  color: Color(0xfffdfdf9),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              6.horizontalSpace,
+              Container(
+                height: 24.h,
+                width: 24.w,
+                decoration: BoxDecoration(
+                  color: Color(0xff06d6a0),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              6.horizontalSpace,
+              Container(
+                height: 24.h,
+                width: 24.w,
+                decoration: BoxDecoration(
+                  color: Color(0xff118ab2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ],
+          ),
+          AppSizes.s.verticalSpace,
+          Row(
+            children: [Text("Mint", style: TextStyle(fontSize: AppSizes.m))],
+          ),
+          Row(
+            children: [
+              Text(
+                "fresh and cool",
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget section(String title) {
+  return Row(
+    children: [
+      24.horizontalSpace,
+      Text(
+        title,
+        style: TextStyle(fontSize: AppSizes.ml, fontWeight: FontWeight.w600),
+      ),
+    ],
+  );
+}
+
+Widget settingsItem({
+  required String svgIconPath,
+  required String title,
+  bool? isLast,
+  required BuildContext context,
+}) {
+  return GestureDetector(
+    onTap: () {
+      showModalBottomSheet(
+        // barrierColor: Colors.transparent,
+        backgroundColor: Colors.transparent,
+        isDismissible: false,
+        useSafeArea: true,
+        context: context,
+        builder: (context) {
+          return SafeArea(child: LogOutBottomDrawer(context: context));
+        },
+      );
+    },
+    child: Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: Container(
+        decoration: BoxDecoration(
+          border: !(isLast != null && isLast == true)
+              ? Border(
+                  bottom: BorderSide(
+                    color: Colors.grey.withAlpha(80),
+                    width: 1,
+                  ),
+                )
+              : null,
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: AppSizes.l),
+          child: Row(
+            children: [
+              Row(
+                children: [
+                  SvgPicture.asset(
+                    height: 24,
+                    svgIconPath,
+                    colorFilter: ColorFilter.mode(
+                      Colors.black87,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  AppSizes.m.horizontalSpace,
+                  Text(
+                    title,
+                    style: TextStyle(color: Colors.black87, fontSize: 14.sp),
+                  ),
+                ],
+              ),
+              Spacer(),
+              Icon(Icons.arrow_forward_ios_rounded, size: 14),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
