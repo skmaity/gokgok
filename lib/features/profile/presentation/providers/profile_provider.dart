@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gokgok/core/network/supabase_providers.dart';
 import 'package:gokgok/features/profile/data/datasources/profile_remote_data_source.dart';
@@ -23,10 +25,24 @@ class ProfileNotifier extends AsyncNotifier<ProfileScreenModel> {
   Future<ProfileScreenModel> build() => _repository.fetchCurrentProfile();
 
   /// Persists the editable profile fields via the repository.
-  Future<void> updateProfile({
-    required String email,
-    required String fullName,
-  }) {
-    return _repository.updateProfile(email: email, fullName: fullName);
+  Future<void> updateProfile({required String fullName}) {
+    return _repository.updateProfile(fullName: fullName);
+  }
+
+  /// Uploads a new avatar and refreshes the profile.
+  Future<void> updateAvatar({
+    required Uint8List bytes,
+    required String fileExt,
+  }) async {
+    await _repository.updateAvatar(bytes: bytes, fileExt: fileExt);
+    ref.invalidateSelf();
+    await future;
+  }
+
+  /// Removes the avatar and refreshes the profile.
+  Future<void> removeAvatar() async {
+    await _repository.removeAvatar();
+    ref.invalidateSelf();
+    await future;
   }
 }

@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'package:gokgok/features/groups/domain/entities/member_model.dart';
+
 GroupModel groupModelFromJson(String str) =>
     GroupModel.fromJson(json.decode(str));
 
@@ -15,7 +17,7 @@ class GroupModel {
   final String inviteCode;
   final String createdBy;
   final DateTime createdAt;
-  final List<String> memberAvatarUrls;
+  final List<MemberModel> members;
 
   GroupModel({
     required this.id,
@@ -23,7 +25,7 @@ class GroupModel {
     required this.inviteCode,
     required this.createdBy,
     required this.createdAt,
-    this.memberAvatarUrls = const [],
+    this.members = const [],
   });
 
   GroupModel copyWith({
@@ -32,14 +34,14 @@ class GroupModel {
     String? inviteCode,
     String? createdBy,
     DateTime? createdAt,
-    List<String>? memberAvatarUrls,
+    List<MemberModel>? members,
   }) => GroupModel(
     id: id ?? this.id,
     name: name ?? this.name,
     inviteCode: inviteCode ?? this.inviteCode,
     createdBy: createdBy ?? this.createdBy,
     createdAt: createdAt ?? this.createdAt,
-    memberAvatarUrls: memberAvatarUrls ?? this.memberAvatarUrls,
+    members: members ?? this.members,
   );
 
   factory GroupModel.fromJson(Map<String, dynamic> json) => GroupModel(
@@ -48,11 +50,12 @@ class GroupModel {
     inviteCode: json["invite_code"],
     createdBy: json["created_by"],
     createdAt: DateTime.parse(json["created_at"]),
-    memberAvatarUrls: (json['group_members'] as List?)
-            ?.map((m) => (m['profiles']?['avatar_url'] as String?) ?? '')
-            .where((url) => url.isNotEmpty)
+    members:
+        (json['group_members'] as List?)
+            ?.where((m) => m['profiles'] != null)
+            .map((m) => MemberModel.fromJson(m['profiles'] as Map<String, dynamic>))
             .toList() ??
-        [],
+        const [],
   );
 
   Map<String, dynamic> toJson() => {

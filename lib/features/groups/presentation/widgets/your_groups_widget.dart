@@ -1,10 +1,12 @@
 import 'package:avatar_stack/avatar_stack.dart';
+import 'package:avatar_stack/positions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/features/groups/domain/entities/group_model.dart';
+import 'package:gokgok/features/groups/domain/entities/member_model.dart';
 import 'package:gokgok/features/groups/presentation/providers/group_provider.dart';
 import 'package:gokgok/features/dashboard/presentation/providers/navbar_provider.dart';
 
@@ -81,19 +83,52 @@ class _GroupTile extends StatelessWidget {
       leading: CircleAvatar(child: Text(group.name[0].toUpperCase())),
 
       title: Text(group.name, style: TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: group.memberAvatarUrls.isEmpty
+      subtitle: group.members.isEmpty
           ? SizedBox()
           : SizedBox(
               width: 60,
-              height: 40,
-              child: AvatarStack(
-                height: 40,
-                avatars: group.memberAvatarUrls
-                    .map((url) => NetworkImage(url))
+              height: 22,
+
+              child: WidgetStack(
+                positions: RestrictedPositions(
+                  minCoverage: 0.4,
+                  maxCoverage: 0.6,
+                ),
+                stackedWidgets: group.members
+                    .map((m) => _memberAvatar(context, m))
                     .toList(),
+                buildInfoWidget: (surplus, context) =>
+                    _initialCircle(context, '+$surplus'),
               ),
             ),
       trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+    );
+  }
+
+  Widget _memberAvatar(BuildContext context, MemberModel member) {
+    if (member.avatarUrl.isNotEmpty) {
+      return BorderedCircleAvatar(
+        border: const BorderSide(color: Colors.white, width: 2),
+        backgroundImage: NetworkImage(member.avatarUrl),
+      );
+    }
+    final initial = member.username.isNotEmpty
+        ? member.username[0].toUpperCase()
+        : '?';
+    return _initialCircle(context, initial);
+  }
+
+  Widget _initialCircle(BuildContext context, String text) {
+    return BorderedCircleAvatar(
+      border: const BorderSide(color: Colors.white, width: 2),
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Text(text, style: const TextStyle(color: Colors.white)),
+        ),
+      ),
     );
   }
 }

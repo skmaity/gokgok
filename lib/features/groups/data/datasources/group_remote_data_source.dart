@@ -39,16 +39,11 @@ class GroupRemoteDataSource {
     return members.map((m) => m['user_id'] as String).toList();
   }
 
-  Future<List<String>> fetchAvatarUrls(List<String> userIds) async {
-    final profiles = await _client
+  Future<List<Map<String, dynamic>>> fetchMemberProfiles(List<String> userIds) {
+    return _client
         .from('profiles')
-        .select('avatar_url')
+        .select('id, full_name, avatar_url, updated_at')
         .inFilter('id', userIds);
-
-    return profiles
-        .map((p) => (p['avatar_url'] as String?) ?? '')
-        .where((url) => url.isNotEmpty)
-        .toList();
   }
 
   Future<Map<String, dynamic>?> findGroupByInviteCode(String code) {
@@ -71,10 +66,7 @@ class GroupRemoteDataSource {
         .maybeSingle();
   }
 
-  Future<void> addMember({
-    required String groupId,
-    required String userId,
-  }) {
+  Future<void> addMember({required String groupId, required String userId}) {
     return _client.from('group_members').insert({
       'group_id': groupId,
       'user_id': userId,

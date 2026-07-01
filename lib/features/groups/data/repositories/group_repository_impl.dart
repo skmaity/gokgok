@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:gokgok/core/errors/app_exception.dart';
 import 'package:gokgok/features/groups/data/datasources/group_remote_data_source.dart';
 import 'package:gokgok/features/groups/domain/entities/group_model.dart';
+import 'package:gokgok/features/groups/domain/entities/member_model.dart';
 import 'package:gokgok/features/groups/domain/repositories/group_repository.dart';
 
 class GroupRepositoryImpl implements GroupRepository {
@@ -17,7 +20,7 @@ class GroupRepositoryImpl implements GroupRepository {
     if (userId == null) return [];
 
     final groupRows = await _remote.fetchMemberGroupRows(userId);
-    return _attachAvatars(groupRows);
+    return _attachMembers(groupRows);
   }
 
   @override
@@ -30,17 +33,17 @@ class GroupRepositoryImpl implements GroupRepository {
 
       final groupIds = memberRows.map((r) => r['group_id'] as String).toList();
       final groupRows = await _remote.fetchGroupsByIds(groupIds);
-      return _attachAvatars(groupRows);
+      return _attachMembers(groupRows);
     });
   }
 
-  Future<List<GroupModel>> _attachAvatars(
+  Future<List<GroupModel>> _attachMembers(
     List<Map<String, dynamic>> groupRows,
   ) {
-    return Future.wait(groupRows.map(_attachMemberAvatars));
+    return Future.wait(groupRows.map(_attachMembersToGroup));
   }
 
-  Future<GroupModel> _attachMemberAvatars(
+  Future<GroupModel> _attachMembersToGroup(
     Map<String, dynamic> groupJson,
   ) async {
     try {
@@ -49,11 +52,11 @@ class GroupRepositoryImpl implements GroupRepository {
       );
       if (userIds.isEmpty) return GroupModel.fromJson(groupJson);
 
-      final avatarUrls = await _remote.fetchAvatarUrls(userIds);
-      return GroupModel.fromJson(
-        groupJson,
-      ).copyWith(memberAvatarUrls: avatarUrls);
-    } catch (_) {
+      final rows = await _remote.fetchMemberProfiles(userIds);
+      final members = rows.map(MemberModel.fromJson).toList();
+      return GroupModel.fromJson(groupJson).copyWith(members: members);
+    } catch (e) {
+      log("error in gorup members data${e.toString()}");
       return GroupModel.fromJson(groupJson);
     }
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:gokgok/core/widgets/submit_button.dart';
 import 'package:gokgok/core/widgets/top_header_widget.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
@@ -19,7 +20,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
+  final ImagePicker _picker = ImagePicker();
   bool _isSaving = false;
+  bool _isUploadingAvatar = false;
+  bool _controllersInitialized = false;
 
   @override
   void initState() {
@@ -42,10 +46,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     try {
       await ref
           .read(profileScreenProvider.notifier)
-          .updateProfile(
-            email: _emailController.text.trim(),
-            fullName: _nameController.text.trim(),
-          );
+          .updateProfile(fullName: _nameController.text.trim());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -72,7 +73,65 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => _AvatarOptionsSheet(highlight: highlight),
+      builder: (sheetContext) => _AvatarOptionsSheet(
+        highlight: highlight,
+        onCamera: () {
+          Navigator.pop(sheetContext);
+          _pickAndUpload(ImageSource.camera);
+        },
+        onGallery: () {
+          Navigator.pop(sheetContext);
+          _pickAndUpload(ImageSource.gallery);
+        },
+        onRemove: () {
+          Navigator.pop(sheetContext);
+          _removeAvatar();
+        },
+      ),
+    );
+  }
+
+  Future<void> _pickAndUpload(ImageSource source) async {
+    final picked = await _picker.pickImage(
+      source: source,
+      imageQuality: 70,
+      maxWidth: 800,
+    );
+    if (picked == null) return;
+
+    setState(() => _isUploadingAvatar = true);
+    try {
+      final bytes = await picked.readAsBytes();
+      final ext = picked.name.contains('.')
+          ? picked.name.split('.').last.toLowerCase()
+          : 'jpg';
+      await ref
+          .read(profileScreenProvider.notifier)
+          .updateAvatar(bytes: bytes, fileExt: ext);
+      _showSnack('Profile photo updated');
+    } catch (e) {
+      _showSnack(e.toString());
+    } finally {
+      if (mounted) setState(() => _isUploadingAvatar = false);
+    }
+  }
+
+  Future<void> _removeAvatar() async {
+    setState(() => _isUploadingAvatar = true);
+    try {
+      await ref.read(profileScreenProvider.notifier).removeAvatar();
+      _showSnack('Profile photo removed');
+    } catch (e) {
+      _showSnack(e.toString());
+    } finally {
+      if (mounted) setState(() => _isUploadingAvatar = false);
+    }
+  }
+
+  void _showSnack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -86,12 +145,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Scaffold(
       body: profileAssync.when(
         data: (data) {
-          _nameController.text = data.name ?? '';
-          _emailController.text = data.email ?? '';
-          _phoneController.text =
-              data.phoneNumber?.isNotEmpty == true
-                  ? data.phoneNumber!
-                  : 'Not provided';
+          // Populate once when the profile first loads. Re-running this on every
+          // rebuild (e.g. keyboard animation) would wipe what the user is typing.
+          if (!_controllersInitialized) {
+            _nameController.text = data.name ?? '';
+            _emailController.text = data.email ?? '';
+            _phoneController.text = data.phoneNumber?.isNotEmpty == true
+                ? data.phoneNumber!
+                : 'Not provided';
+            _controllersInitialized = true;
+          }
           return Column(
             children: [
               MediaQuery.of(context).padding.top.verticalSpace,
@@ -129,7 +192,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   ],
                                 ),
                                 child: ClipOval(
-                                  child: data.profileUrl != null
+                                  child: _isUploadingAvatar
+                                      ? Container(
+                                          color: highlight.withAlpha(25),
+                                          child: Center(
+                                            child: CircularProgressIndicator(
+                                              color: highlight,
+                                              strokeWidth: 2.5,
+                                            ),
+                                          ),
+                                        )
+                                      : data.profileUrl != null
                                       ? Image.network(
                                           data.profileUrl ?? "",
                                           fit: BoxFit.cover,
@@ -176,6 +249,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         icon: Icons.email_outlined,
                         highlight: highlight,
                         keyboardType: TextInputType.emailAddress,
+                        readOnly: true,
                       ),
                       AppSizes.m.verticalSpace,
                       _ProfileField(
@@ -305,7 +379,15 @@ class _ProfileField extends StatelessWidget {
 
 class _AvatarOptionsSheet extends StatelessWidget {
   final Color highlight;
-  const _AvatarOptionsSheet({required this.highlight});
+  final VoidCallback onCamera;
+  final VoidCallback onGallery;
+  final VoidCallback onRemove;
+  const _AvatarOptionsSheet({
+    required this.highlight,
+    required this.onCamera,
+    required this.onGallery,
+    required this.onRemove,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -337,27 +419,21 @@ class _AvatarOptionsSheet extends StatelessWidget {
             icon: Icons.camera_alt_outlined,
             label: 'Take Photo',
             highlight: highlight,
-            onTap: () {
-              Navigator.pop(context);
-            },
+            onTap: onCamera,
           ),
           AppSizes.s.verticalSpace,
           _SheetOption(
             icon: Icons.photo_library_outlined,
             label: 'Choose from Gallery',
             highlight: highlight,
-            onTap: () {
-              Navigator.pop(context);
-            },
+            onTap: onGallery,
           ),
           AppSizes.s.verticalSpace,
           _SheetOption(
             icon: Icons.delete_outline_rounded,
             label: 'Remove Photo',
             highlight: Colors.red,
-            onTap: () {
-              Navigator.pop(context);
-            },
+            onTap: onRemove,
           ),
           AppSizes.m.verticalSpace,
         ],

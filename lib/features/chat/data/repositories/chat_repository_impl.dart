@@ -53,6 +53,7 @@ class ChatRepositoryImpl implements ChatRepository {
     return conversationId;
   }
 
+  // send messages
   @override
   Future<void> sendMessage(String conversationId, String text) async {
     final userId = currentUserId;
