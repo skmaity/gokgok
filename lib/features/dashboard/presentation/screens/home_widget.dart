@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gokgok/core/constants/app_assets.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
+import 'package:gokgok/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:gokgok/features/groups/presentation/widgets/empty_state_no_friends_groups.dart';
 import 'package:gokgok/features/groups/presentation/providers/group_provider.dart';
 import 'package:gokgok/features/groups/presentation/widgets/create_group_bottom_sheet.dart';
@@ -103,6 +104,8 @@ class _HomeWidgetState extends ConsumerState<HomeWidget> {
   @override
   Widget build(BuildContext context) {
     TextEditingController searchController = TextEditingController();
+    final profile = ref.watch(dashboardProvider).value;
+    final avatarUrl = profile?.avatarUrl;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -128,20 +131,43 @@ class _HomeWidgetState extends ConsumerState<HomeWidget> {
                     onTap: () {
                       context.push('/profile');
                     },
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(
-                        AppSizes.radiusCircular,
-                      ),
-                      child: SizedBox(
-                        height: AppSizes.avatarSize,
-                        width: AppSizes.avatarSize,
-                        child: Center(
-                          child: Image(
-                            image: AssetImage(AppAssets.profilePlaceholder),
-                            fit: BoxFit.cover,
+                    child: Row(
+                      children: [
+                        if (profile?.fullName != null &&
+                            profile!.fullName!.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(right: AppSizes.s),
+                            child: Text(
+                              profile.fullName!,
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.radiusCircular,
+                          ),
+                          child: SizedBox(
+                            height: AppSizes.avatarSize,
+                            width: AppSizes.avatarSize,
+                            child: (avatarUrl != null && avatarUrl.isNotEmpty)
+                                ? Image.network(
+                                    avatarUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Image.asset(
+                                      AppAssets.profilePlaceholder,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Image.asset(
+                                    AppAssets.profilePlaceholder,
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ],
