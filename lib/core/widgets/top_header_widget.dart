@@ -9,7 +9,13 @@ import 'package:gokgok/core/theme/app_sizes.dart';
 class TopHeaderWidget extends StatelessWidget {
   final void Function()? onPressed;
   final String title;
-  const TopHeaderWidget({super.key, required this.onPressed, this.title = ''});
+  final Widget? trailing;
+  const TopHeaderWidget({
+    super.key,
+    required this.onPressed,
+    this.title = '',
+    this.trailing,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +54,11 @@ class TopHeaderWidget extends StatelessWidget {
           title,
           style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w600),
         ),
+        if (trailing != null) ...[
+          const Spacer(),
+          trailing!,
+          AppSizes.m.horizontalSpace,
+        ],
       ],
     );
   }

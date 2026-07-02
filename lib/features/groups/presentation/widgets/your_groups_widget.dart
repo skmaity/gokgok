@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gokgok/core/routing/app_routes.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/features/groups/domain/entities/group_model.dart';
 import 'package:gokgok/features/groups/domain/entities/member_model.dart';
@@ -77,7 +78,7 @@ class _GroupTile extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       onTap: () {
-        context.go('/chat', extra: group);
+        context.push(AppRoutes.chat, extra: group);
       },
 
       leading: CircleAvatar(child: Text(group.name[0].toUpperCase())),

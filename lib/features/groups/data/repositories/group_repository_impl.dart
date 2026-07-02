@@ -1,10 +1,13 @@
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:gokgok/core/errors/app_exception.dart';
 import 'package:gokgok/features/groups/data/datasources/group_remote_data_source.dart';
 import 'package:gokgok/features/groups/domain/entities/group_model.dart';
+import 'package:gokgok/features/groups/domain/entities/group_role.dart';
 import 'package:gokgok/features/groups/domain/entities/member_model.dart';
 import 'package:gokgok/features/groups/domain/repositories/group_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GroupRepositoryImpl implements GroupRepository {
   GroupRepositoryImpl(this._remote);
@@ -47,17 +50,123 @@ class GroupRepositoryImpl implements GroupRepository {
     Map<String, dynamic> groupJson,
   ) async {
     try {
-      final userIds = await _remote.fetchGroupMemberIds(
-        groupJson['id'] as String,
-      );
-      if (userIds.isEmpty) return GroupModel.fromJson(groupJson);
-
-      final rows = await _remote.fetchMemberProfiles(userIds);
-      final members = rows.map(MemberModel.fromJson).toList();
+      final members = await fetchGroupMembers(groupJson['id'] as String);
+      if (members.isEmpty) return GroupModel.fromJson(groupJson);
       return GroupModel.fromJson(groupJson).copyWith(members: members);
     } catch (e) {
-      log("error in gorup members data${e.toString()}");
+      log("error in group members data ${e.toString()}");
       return GroupModel.fromJson(groupJson);
+    }
+  }
+
+  @override
+  Future<List<MemberModel>> fetchGroupMembers(String groupId) async {
+    final memberRows = await _remote.fetchGroupMemberIds(groupId);
+    return _membersWithRoles({
+      for (final m in memberRows)
+        m['userid'] as String: GroupRole.fromValue(m['permission'] as String?),
+    });
+  }
+
+  @override
+  Stream<List<MemberModel>> watchGroupMembers(String groupId) {
+    return _remote.watchGroupMemberRows(groupId).asyncMap(
+      (rows) => _membersWithRoles({
+        for (final r in rows)
+          r['user_id'] as String: GroupRole.fromValue(
+            r['permission'] as String?,
+          ),
+      }),
+    );
+  }
+
+  @override
+  Stream<GroupModel?> watchGroup(String groupId) {
+    return _remote
+        .watchGroupRow(groupId)
+        .map((row) => row == null ? null : GroupModel.fromJson(row));
+  }
+
+  /// Hydrates member profiles for the given userId->role map.
+  Future<List<MemberModel>> _membersWithRoles(
+    Map<String, GroupRole> roleById,
+  ) async {
+    if (roleById.isEmpty) return const [];
+    final profiles = await _remote.fetchMemberProfiles(roleById.keys.toList());
+    return profiles
+        .map(
+          (p) =>
+              MemberModel.fromJson(p).copyWith(permission: roleById[p['id']]),
+        )
+        .toList();
+  }
+
+  @override
+  Future<void> transferAdmin({
+    required String groupId,
+    required String newAdminId,
+  }) {
+    return _runRpc(
+      () => _remote.transferAdmin(groupId: groupId, newAdminId: newAdminId),
+    );
+  }
+
+  @override
+  Future<void> setMemberRole({
+    required String groupId,
+    required String targetId,
+    required GroupRole role,
+  }) {
+    return _runRpc(
+      () => _remote.setMemberRole(
+        groupId: groupId,
+        targetId: targetId,
+        role: role,
+      ),
+    );
+  }
+
+  @override
+  Future<void> kickMember({
+    required String groupId,
+    required String targetId,
+  }) {
+    return _runRpc(
+      () => _remote.kickMember(groupId: groupId, targetId: targetId),
+    );
+  }
+
+  @override
+  Future<String?> updateGroupAvatar({
+    required String groupId,
+    Uint8List? bytes,
+  }) async {
+    try {
+      String? url;
+      if (bytes != null) {
+        // Crop output is always a 500x500 JPG (see avatar_picker.dart).
+        url = await _remote.uploadGroupAvatar(
+          groupId: groupId,
+          bytes: bytes,
+          fileExt: 'jpg',
+        );
+      }
+      await _remote.updateGroupAvatarUrl(groupId: groupId, url: url);
+      return url;
+    } on StorageException catch (e) {
+      throw AppException(e.message);
+    } on PostgrestException catch (e) {
+      throw AppException(e.message);
+    }
+  }
+
+  /// Surfaces the `raise exception` message from the SQL RPCs as a clean
+  /// [AppException] for the UI.
+  Future<void> _runRpc(Future<void> Function() call) async {
+    try {
+      await call();
+    } on PostgrestException catch (e) {
+      throw AppException(e.message);
     }
   }
 
@@ -93,7 +202,11 @@ class GroupRepositoryImpl implements GroupRepository {
     if (userId == null) throw const AppException('Not authenticated');
 
     final json = await _remote.insertGroup(name: groupName, createdBy: userId);
-    await _remote.addMember(groupId: json['id'] as String, userId: userId);
+    await _remote.addMember(
+      groupId: json['id'] as String,
+      userId: userId,
+      role: GroupRole.admin,
+    );
     return GroupModel.fromJson(json);
   }
 }

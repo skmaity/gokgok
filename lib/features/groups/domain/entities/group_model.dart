@@ -12,6 +12,7 @@ GroupModel groupModelFromJson(String str) =>
 String groupModelToJson(GroupModel data) => json.encode(data.toJson());
 
 class GroupModel {
+  final String? groupAvatarUrl;
   final String id;
   final String name;
   final String inviteCode;
@@ -20,6 +21,7 @@ class GroupModel {
   final List<MemberModel> members;
 
   GroupModel({
+    required this.groupAvatarUrl,
     required this.id,
     required this.name,
     required this.inviteCode,
@@ -29,6 +31,7 @@ class GroupModel {
   });
 
   GroupModel copyWith({
+    String? groupAvatarUrl,
     String? id,
     String? name,
     String? inviteCode,
@@ -36,6 +39,7 @@ class GroupModel {
     DateTime? createdAt,
     List<MemberModel>? members,
   }) => GroupModel(
+    groupAvatarUrl: groupAvatarUrl ?? this.groupAvatarUrl,
     id: id ?? this.id,
     name: name ?? this.name,
     inviteCode: inviteCode ?? this.inviteCode,
@@ -45,6 +49,7 @@ class GroupModel {
   );
 
   factory GroupModel.fromJson(Map<String, dynamic> json) => GroupModel(
+    groupAvatarUrl: json['group_avatar_url'],
     id: json["id"],
     name: json["name"],
     inviteCode: json["invite_code"],
@@ -53,7 +58,10 @@ class GroupModel {
     members:
         (json['group_members'] as List?)
             ?.where((m) => m['profiles'] != null)
-            .map((m) => MemberModel.fromJson(m['profiles'] as Map<String, dynamic>))
+            .map(
+              (m) =>
+                  MemberModel.fromJson(m['profiles'] as Map<String, dynamic>),
+            )
             .toList() ??
         const [],
   );

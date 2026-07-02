@@ -5,6 +5,7 @@ import 'package:gokgok/features/auth/presentation/providers/auth_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:gokgok/core/routing/app_routes.dart';
 import 'package:gokgok/core/widgets/top_header_widget.dart';
 import 'package:gokgok/core/constants/app_assets.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
@@ -27,7 +28,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     ref.listen<AuthState>(authProvider, (_, next) {
       if (next is AuthSuccess) {
         ref.read(authProvider.notifier).reset();
-        context.go('/dashboard');
+        context.go(AppRoutes.dashboard);
       } else if (next is AuthError) {
         ScaffoldMessenger.of(
           context,
@@ -186,7 +187,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             alignment: PlaceholderAlignment.middle,
                             child: GestureDetector(
                               onTap: () {
-                                context.go('/signup');
+                                context.go(AppRoutes.signup);
                               },
                               child: Text(
                                 "Sign up",

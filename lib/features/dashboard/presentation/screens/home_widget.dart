@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:gokgok/core/constants/app_assets.dart';
+import 'package:gokgok/core/routing/app_routes.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
+import 'package:gokgok/core/widgets/app_network_image.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
 import 'package:gokgok/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:gokgok/features/groups/presentation/widgets/empty_state_no_friends_groups.dart';
@@ -107,6 +108,8 @@ class _HomeWidgetState extends ConsumerState<HomeWidget> {
     final profile = ref.watch(dashboardProvider).value;
     final avatarUrl = profile?.avatarUrl;
 
+    final firstName = (profile?.fullName ?? '').trim().split(' ').first;
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
@@ -119,6 +122,37 @@ class _HomeWidgetState extends ConsumerState<HomeWidget> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  GestureDetector(
+                    onTap: () {
+                      context.push(AppRoutes.profile);
+                    },
+                    child: Row(
+                      children: [
+                        AppNetworkImage(
+                          url: avatarUrl,
+                          size: AppSizes.avatarSize,
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.radiusCircular,
+                          ),
+                        ),
+                        if (profile?.fullName != null &&
+                            profile!.fullName!.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(left: AppSizes.sm),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                firstName,
+                                style: TextStyle(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                   Text(
                     'GokGok',
                     style: GoogleFonts.lobster(
@@ -126,52 +160,9 @@ class _HomeWidgetState extends ConsumerState<HomeWidget> {
                       color: Colors.amber,
                     ),
                   ),
-
-                  GestureDetector(
-                    onTap: () {
-                      context.push('/profile');
-                    },
-                    child: Row(
-                      children: [
-                        if (profile?.fullName != null &&
-                            profile!.fullName!.isNotEmpty)
-                          Padding(
-                            padding: EdgeInsets.only(right: AppSizes.s),
-                            child: Text(
-                              profile.fullName!,
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            AppSizes.radiusCircular,
-                          ),
-                          child: SizedBox(
-                            height: AppSizes.avatarSize,
-                            width: AppSizes.avatarSize,
-                            child: (avatarUrl != null && avatarUrl.isNotEmpty)
-                                ? Image.network(
-                                    avatarUrl,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Image.asset(
-                                      AppAssets.profilePlaceholder,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : Image.asset(
-                                    AppAssets.profilePlaceholder,
-                                    fit: BoxFit.cover,
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
+
               AppSizes.m.verticalSpace,
               // body (Search bar)
               Container(

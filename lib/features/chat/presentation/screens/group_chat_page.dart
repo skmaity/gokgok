@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gokgok/core/routing/app_routes.dart';
 import 'package:gokgok/core/widgets/top_header_widget.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
@@ -80,9 +81,22 @@ class _GroupChatPageState extends ConsumerState<GroupChatPage> {
             TopHeaderWidget(
               onPressed: () => context.pop(),
               title: widget.group.name,
+              trailing: PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                onSelected: (value) {
+                  if (value == 'members') {
+                    context.push(AppRoutes.chatMembers, extra: widget.group);
+                  } else {
+                    // TODO: abc action
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'members', child: Text('Members')),
+                  PopupMenuItem(value: 'abc', child: Text('Abc')),
+                ],
+              ),
             ),
-            // _Header(group: widget.group),
-            // const Divider(height: 1),
+
             Expanded(child: _buildBody(highlight)),
             _InputBar(
               controller: _textController,

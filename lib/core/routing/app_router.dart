@@ -4,8 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gokgok/core/network/supabase_providers.dart';
+import 'package:gokgok/core/routing/app_routes.dart';
 import 'package:gokgok/features/auth/presentation/screens/login_page.dart';
 import 'package:gokgok/features/auth/presentation/screens/sign_up_page.dart';
+import 'package:gokgok/features/chat/presentation/screens/chat_members_page.dart';
 import 'package:gokgok/features/chat/presentation/screens/group_chat_page.dart';
 import 'package:gokgok/features/dashboard/presentation/screens/dash_board.dart';
 import 'package:gokgok/features/groups/domain/entities/group_model.dart';
@@ -40,35 +42,39 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isLoggedIn = client.auth.currentUser != null;
       final location = state.matchedLocation;
-      final isAuthRoute = location == '/' || location == '/signup';
+      final isAuthRoute =
+          location == AppRoutes.login || location == AppRoutes.signup;
 
-      if (!isLoggedIn && !isAuthRoute) return '/';
-      if (isLoggedIn && isAuthRoute) return '/dashboard';
+      if (!isLoggedIn && !isAuthRoute) return AppRoutes.login;
+      if (isLoggedIn && isAuthRoute) return AppRoutes.dashboard;
       return null;
     },
     routes: <RouteBase>[
       GoRoute(
-        path: '/',
+        path: AppRoutes.login,
         builder: (context, state) => const LoginPage(),
-        routes: [
-          GoRoute(
-            path: 'dashboard',
-            builder: (context, state) => const DashBoard(),
-          ),
-          GoRoute(
-            path: 'signup',
-            builder: (context, state) => const SignUpPage(),
-          ),
-          GoRoute(
-            path: 'profile',
-            builder: (context, state) => const ProfileScreen(),
-          ),
-          GoRoute(
-            path: 'chat',
-            builder: (context, state) =>
-                GroupChatPage(group: state.extra as GroupModel),
-          ),
-        ],
+      ),
+      GoRoute(
+        path: AppRoutes.dashboard,
+        builder: (context, state) => const DashBoard(),
+      ),
+      GoRoute(
+        path: AppRoutes.signup,
+        builder: (context, state) => const SignUpPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.chat,
+        builder: (context, state) =>
+            GroupChatPage(group: state.extra as GroupModel),
+      ),
+      GoRoute(
+        path: AppRoutes.chatMembers,
+        builder: (context, state) =>
+            ChatMembersPage(group: state.extra as GroupModel),
       ),
     ],
   );

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:gokgok/core/widgets/app_network_image.dart';
+import 'package:gokgok/core/widgets/avatar_picker.dart';
 import 'package:gokgok/core/widgets/submit_button.dart';
 import 'package:gokgok/core/widgets/top_header_widget.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
@@ -20,7 +22,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
-  final ImagePicker _picker = ImagePicker();
   bool _isSaving = false;
   bool _isUploadingAvatar = false;
   bool _controllersInitialized = false;
@@ -69,45 +70,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  void _showAvatarOptions(Color highlight) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => _AvatarOptionsSheet(
-        highlight: highlight,
-        onCamera: () {
-          Navigator.pop(sheetContext);
-          _pickAndUpload(ImageSource.camera);
-        },
-        onGallery: () {
-          Navigator.pop(sheetContext);
-          _pickAndUpload(ImageSource.gallery);
-        },
-        onRemove: () {
-          Navigator.pop(sheetContext);
-          _removeAvatar();
-        },
-      ),
+  void _showAvatarOptions() {
+    showAvatarOptionsSheet(
+      context,
+      title: 'Change Profile Photo',
+      onCamera: () => _pickAndUpload(ImageSource.camera),
+      onGallery: () => _pickAndUpload(ImageSource.gallery),
+      onRemove: _removeAvatar,
     );
   }
 
   Future<void> _pickAndUpload(ImageSource source) async {
-    final picked = await _picker.pickImage(
-      source: source,
-      imageQuality: 70,
-      maxWidth: 800,
-    );
-    if (picked == null) return;
+    final bytes = await pickAndCropAvatar(context, source: source);
+    if (bytes == null) return;
 
     setState(() => _isUploadingAvatar = true);
     try {
-      final bytes = await picked.readAsBytes();
-      final ext = picked.name.contains('.')
-          ? picked.name.split('.').last.toLowerCase()
-          : 'jpg';
       await ref
           .read(profileScreenProvider.notifier)
-          .updateAvatar(bytes: bytes, fileExt: ext);
+          .updateAvatar(bytes: bytes, fileExt: 'jpg');
       _showSnack('Profile photo updated');
     } catch (e) {
       _showSnack(e.toString());
@@ -170,7 +151,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       Center(
                         child: GestureDetector(
-                          onTap: () => _showAvatarOptions(highlight),
+                          onTap: _showAvatarOptions,
                           child: Stack(
                             alignment: Alignment.bottomRight,
                             children: [
@@ -202,16 +183,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                             ),
                                           ),
                                         )
-                                      : data.profileUrl != null
-                                      ? Image.network(
-                                          data.profileUrl ?? "",
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                              _DefaultAvatar(
-                                                highlight: highlight,
-                                              ),
-                                        )
-                                      : _DefaultAvatar(highlight: highlight),
+                                      : AppNetworkImage(
+                                          url: data.profileUrl,
+                                          fallback: _DefaultAvatar(
+                                            highlight: highlight,
+                                          ),
+                                        ),
                                 ),
                               ),
                               Container(
@@ -377,109 +354,3 @@ class _ProfileField extends StatelessWidget {
   }
 }
 
-class _AvatarOptionsSheet extends StatelessWidget {
-  final Color highlight;
-  final VoidCallback onCamera;
-  final VoidCallback onGallery;
-  final VoidCallback onRemove;
-  const _AvatarOptionsSheet({
-    required this.highlight,
-    required this.onCamera,
-    required this.onGallery,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.all(AppSizes.m),
-      padding: EdgeInsets.all(AppSizes.m),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 36.w,
-            height: 4.h,
-            decoration: BoxDecoration(
-              color: Colors.grey.withAlpha(80),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          AppSizes.m.verticalSpace,
-          Text(
-            'Change Profile Photo',
-            style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
-          ),
-          AppSizes.m.verticalSpace,
-          _SheetOption(
-            icon: Icons.camera_alt_outlined,
-            label: 'Take Photo',
-            highlight: highlight,
-            onTap: onCamera,
-          ),
-          AppSizes.s.verticalSpace,
-          _SheetOption(
-            icon: Icons.photo_library_outlined,
-            label: 'Choose from Gallery',
-            highlight: highlight,
-            onTap: onGallery,
-          ),
-          AppSizes.s.verticalSpace,
-          _SheetOption(
-            icon: Icons.delete_outline_rounded,
-            label: 'Remove Photo',
-            highlight: Colors.red,
-            onTap: onRemove,
-          ),
-          AppSizes.m.verticalSpace,
-        ],
-      ),
-    );
-  }
-}
-
-class _SheetOption extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color highlight;
-  final VoidCallback onTap;
-
-  const _SheetOption({
-    required this.icon,
-    required this.label,
-    required this.highlight,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: AppSizes.m, vertical: 14.h),
-        decoration: BoxDecoration(
-          color: highlight.withAlpha(15),
-          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: highlight, size: 22.w),
-            AppSizes.m.horizontalSpace,
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-                color: highlight,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
