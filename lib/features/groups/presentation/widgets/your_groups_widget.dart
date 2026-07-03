@@ -1,11 +1,14 @@
 import 'package:avatar_stack/avatar_stack.dart';
 import 'package:avatar_stack/positions.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gokgok/core/routing/app_routes.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
+import 'package:gokgok/core/theme/app_sizes.dart';
+import 'package:gokgok/core/widgets/app_network_image.dart';
 import 'package:gokgok/features/groups/domain/entities/group_model.dart';
 import 'package:gokgok/features/groups/domain/entities/member_model.dart';
 import 'package:gokgok/features/groups/presentation/providers/group_provider.dart';
@@ -81,7 +84,13 @@ class _GroupTile extends StatelessWidget {
         context.push(AppRoutes.chat, extra: group);
       },
 
-      leading: CircleAvatar(child: Text(group.name[0].toUpperCase())),
+      leading: group.groupAvatarUrl == null
+          ? CircleAvatar(child: Text(group.name[0].toUpperCase()))
+          : AppNetworkImage(
+              url: group.groupAvatarUrl,
+              size: AppSizes.avatarSize,
+              borderRadius: BorderRadius.circular(AppSizes.radiusCircular),
+            ),
 
       title: Text(group.name, style: TextStyle(fontWeight: FontWeight.w600)),
       subtitle: group.members.isEmpty
@@ -110,7 +119,7 @@ class _GroupTile extends StatelessWidget {
     if (member.avatarUrl.isNotEmpty) {
       return BorderedCircleAvatar(
         border: const BorderSide(color: Colors.white, width: 2),
-        backgroundImage: NetworkImage(member.avatarUrl),
+        backgroundImage: CachedNetworkImageProvider(member.avatarUrl),
       );
     }
     final initial = member.username.isNotEmpty

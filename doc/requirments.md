@@ -21,3 +21,23 @@ One special feature that makes my app different from others is the **buzzer** fe
 - [ ] voice call
 - [ ] video call
 - [~] buzzer function — plays a local buzzer sound; still need: sound selection from list, import personal sound, and remote buzz to a targeted user/group (ring loud + vibrate)
+
+# chat feature gaps (audit 2026-07-03)
+
+Working today: realtime group text chat, auto-created conversation per group, members page (roles, promote/demote/kick/transfer admin, group avatar). Schema already supports replies (`reply_to_id`), edit (`edited_at`), delete (`deleted_at`), media (`type`/`metadata`); `last_message_at` is written but unused.
+
+- [x] don't lose message text on failed send (input is cleared before the await, no error handling)
+- [x] remove dead "Abc" menu item in group chat header; direct members button
+- [x] don't auto-scroll to bottom while user is reading history
+- [x] sender name + avatar on others' bubbles in group chat
+- [x] date separators (Today / Yesterday / date)
+- [x] chat list: last-message preview + timestamp per tile
+- [x] chat list: sort by recent activity (`last_message_at`)
+- [x] message actions on long-press: copy / reply / edit / delete (own)
+- [ ] image messages (picker + storage upload + viewer already exist for avatars)
+- [ ] unread badges (needs `last_read_at` column on `conversation_members`)
+- [ ] read receipts
+- [ ] typing indicators (Supabase realtime broadcast)
+- [ ] message pagination (stream currently loads full history)
+- [ ] push notifications for new messages (needs FCM setup)
+- [ ] 1:1 direct messages (schema has `conversations.type`; chat list is group-only today)

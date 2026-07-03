@@ -16,6 +16,31 @@ class ChatRemoteDataSource {
         .order('created_at', ascending: true);
   }
 
+  /// Conversations for [groupIds] with their newest non-deleted message.
+  Future<List<Map<String, dynamic>>> fetchConversationPreviews(
+    List<String> groupIds,
+  ) {
+    return _client
+        .from('conversations')
+        .select('group_id, last_message_at, '
+            'messages(body, type, sender_id, created_at)')
+        .inFilter('group_id', groupIds)
+        .isFilter('messages.deleted_at', null)
+        .order('created_at', referencedTable: 'messages', ascending: false)
+        .limit(1, referencedTable: 'messages');
+  }
+
+  /// Emits whenever any of these groups' conversation rows change
+  /// (last_message_at is bumped on every send).
+  Stream<List<Map<String, dynamic>>> watchConversations(
+    List<String> groupIds,
+  ) {
+    return _client
+        .from('conversations')
+        .stream(primaryKey: ['id'])
+        .inFilter('group_id', groupIds);
+  }
+
   Future<Map<String, dynamic>?> findGroupConversation(String groupId) {
     return _client
         .from('conversations')
@@ -56,13 +81,32 @@ class ChatRemoteDataSource {
     required String conversationId,
     required String senderId,
     required String body,
+    String? replyToId,
   }) {
     return _client.from('messages').insert({
       'conversation_id': conversationId,
       'sender_id': senderId,
       'type': 'text',
       'body': body,
+      if (replyToId != null) 'reply_to_id': replyToId,
     });
+  }
+
+  Future<void> updateMessage(String messageId, String body) {
+    return _client
+        .from('messages')
+        .update({
+          'body': body,
+          'edited_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('id', messageId);
+  }
+
+  Future<void> softDeleteMessage(String messageId) {
+    return _client
+        .from('messages')
+        .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+        .eq('id', messageId);
   }
 
   Future<void> touchConversation(String conversationId) {

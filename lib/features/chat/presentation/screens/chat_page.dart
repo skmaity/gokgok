@@ -1,13 +1,14 @@
 import 'package:avatar_stack/avatar_stack.dart';
 import 'package:avatar_stack/positions.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
-import 'package:gokgok/core/routing/app_routes.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
 import 'package:gokgok/core/widgets/app_network_image.dart';
 import 'package:gokgok/features/groups/domain/entities/group_model.dart';
+import 'package:gokgok/features/chat/domain/entities/conversation_preview.dart';
+import 'package:gokgok/features/chat/presentation/providers/chat_provider.dart';
 import 'package:gokgok/features/chat/presentation/screens/group_chat_page.dart';
 import 'package:gokgok/features/groups/domain/entities/member_model.dart';
 import 'package:gokgok/features/groups/presentation/providers/group_provider.dart';
@@ -32,21 +33,32 @@ class ChatPage extends ConsumerWidget {
             child: groupsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('Error: $e')),
-              data: (groups) => groups.isEmpty
-                  ? EmptyStateNoFriendsGroups()
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: ListView.builder(
-                            padding: EdgeInsets.zero,
-                            itemCount: groups.length,
-                            itemBuilder: (context, index) =>
-                                _GroupTile(group: groups[index]),
-                          ),
-                        ),
-                      ],
-                    ),
+              data: (groups) {
+                if (groups.isEmpty) return EmptyStateNoFriendsGroups();
+                final previews =
+                    ref.watch(conversationPreviewsProvider).value ?? const {};
+                final currentUserId =
+                    ref.read(chatRepositoryProvider).currentUserId;
+                // Most recent activity first; groups without messages last.
+                final sorted = [...groups]
+                  ..sort((a, b) {
+                    final ta = previews[a.id]?.lastMessageAt;
+                    final tb = previews[b.id]?.lastMessageAt;
+                    if (ta == null && tb == null) return 0;
+                    if (ta == null) return 1;
+                    if (tb == null) return -1;
+                    return tb.compareTo(ta);
+                  });
+                return ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: sorted.length,
+                  itemBuilder: (context, index) => _GroupTile(
+                    group: sorted[index],
+                    preview: previews[sorted[index].id],
+                    currentUserId: currentUserId,
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -56,12 +68,25 @@ class ChatPage extends ConsumerWidget {
 }
 
 class _GroupTile extends StatelessWidget {
-  const _GroupTile({required this.group});
+  const _GroupTile({required this.group, this.preview, this.currentUserId});
 
   final GroupModel group;
+  final ConversationPreview? preview;
+  final String? currentUserId;
 
   @override
   Widget build(BuildContext context) {
+    final lastMessageAt = preview?.lastMessageAt;
+    String? senderName;
+    if (preview?.senderId != null) {
+      senderName = preview!.senderId == currentUserId
+          ? 'You'
+          : group.members
+                .where((m) => m.id == preview!.senderId)
+                .firstOrNull
+                ?.username;
+    }
+
     return ListTile(
       contentPadding: EdgeInsets.zero,
       onTap: () => Navigator.of(
@@ -76,7 +101,14 @@ class _GroupTile extends StatelessWidget {
             ),
 
       title: Text(group.name),
-      subtitle: group.members.isEmpty
+      subtitle: preview?.body != null
+          ? Text(
+              '${senderName ?? 'Someone'}: ${preview!.body}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+            )
+          : group.members.isEmpty
           ? SizedBox()
           : SizedBox(
               width: 60,
@@ -94,31 +126,34 @@ class _GroupTile extends StatelessWidget {
                     _initialCircle(context, '+$surplus'),
               ),
             ),
-      trailing: PopupMenuButton<String>(
-        color: Colors.white,
-        icon: const Icon(Icons.more_vert_outlined, color: Colors.black54),
-        onSelected: (value) {
-          if (value == 'members') {
-            context.push(AppRoutes.chatMembers, extra: group);
-          } else {
-            // TODO: abc action
-          }
-        },
-        itemBuilder: (_) => const [
-          PopupMenuItem(value: 'members', child: Text('Members')),
-          PopupMenuItem(value: 'abc', child: Text('Abc')),
-        ],
-      ),
-      // trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+      trailing: lastMessageAt != null
+          ? Text(
+              _relativeTime(lastMessageAt),
+              style: TextStyle(fontSize: 11.sp, color: Colors.grey),
+            )
+          : const Icon(Icons.chevron_right_rounded, color: Colors.grey),
     );
   }
+}
+
+String _relativeTime(DateTime t) {
+  final local = t.toLocal();
+  final now = DateTime.now();
+  final diff = DateTime(now.year, now.month, now.day)
+      .difference(DateTime(local.year, local.month, local.day))
+      .inDays;
+  if (diff == 0) {
+    return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+  }
+  if (diff == 1) return 'Yesterday';
+  return '${local.day}/${local.month}/${local.year}';
 }
 
 Widget _memberAvatar(BuildContext context, MemberModel member) {
   if (member.avatarUrl.isNotEmpty) {
     return BorderedCircleAvatar(
       border: const BorderSide(color: Colors.white, width: 2),
-      backgroundImage: NetworkImage(member.avatarUrl),
+      backgroundImage: CachedNetworkImageProvider(member.avatarUrl),
     );
   }
   final initial = member.username.isNotEmpty

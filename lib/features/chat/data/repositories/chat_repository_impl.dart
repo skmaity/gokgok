@@ -1,5 +1,6 @@
 import 'package:gokgok/core/errors/app_exception.dart';
 import 'package:gokgok/features/chat/data/datasources/chat_remote_data_source.dart';
+import 'package:gokgok/features/chat/domain/entities/conversation_preview.dart';
 import 'package:gokgok/features/chat/domain/entities/message_model.dart';
 import 'package:gokgok/features/chat/domain/repositories/chat_repository.dart';
 import 'package:gokgok/features/groups/domain/entities/group_model.dart';
@@ -55,7 +56,11 @@ class ChatRepositoryImpl implements ChatRepository {
 
   // send messages
   @override
-  Future<void> sendMessage(String conversationId, String text) async {
+  Future<void> sendMessage(
+    String conversationId,
+    String text, {
+    String? replyToId,
+  }) async {
     final userId = currentUserId;
     if (userId == null) throw const AppException('Not authenticated');
 
@@ -63,7 +68,34 @@ class ChatRepositoryImpl implements ChatRepository {
       conversationId: conversationId,
       senderId: userId,
       body: text.trim(),
+      replyToId: replyToId,
     );
     await _remote.touchConversation(conversationId);
+  }
+
+  @override
+  Future<void> editMessage(String messageId, String text) {
+    return _remote.updateMessage(messageId, text.trim());
+  }
+
+  @override
+  Future<void> deleteMessage(String messageId) {
+    return _remote.softDeleteMessage(messageId);
+  }
+
+  @override
+  Stream<Map<String, ConversationPreview>> watchConversationPreviews(
+    List<String> groupIds,
+  ) {
+    // ponytail: re-fetches all previews on any conversation-row change; sends
+    // bump last_message_at so this stays live. Edits/deletes of the last
+    // message won't refresh the preview until the next send.
+    return _remote.watchConversations(groupIds).asyncMap((_) async {
+      final rows = await _remote.fetchConversationPreviews(groupIds);
+      return {
+        for (final row in rows)
+          (row['group_id'] as String): ConversationPreview.fromJson(row),
+      };
+    });
   }
 }

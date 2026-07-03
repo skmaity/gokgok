@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gokgok/core/routing/app_routes.dart';
+import 'package:gokgok/core/widgets/app_network_image.dart';
 import 'package:gokgok/core/widgets/top_header_widget.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
 import 'package:gokgok/features/groups/domain/entities/group_model.dart';
+import 'package:gokgok/features/groups/domain/entities/member_model.dart';
+import 'package:gokgok/features/groups/presentation/providers/group_provider.dart';
 import 'package:gokgok/features/chat/domain/entities/message_model.dart';
 import 'package:gokgok/features/chat/presentation/providers/chat_provider.dart';
 
@@ -24,6 +28,9 @@ class _GroupChatPageState extends ConsumerState<GroupChatPage> {
   String? _conversationId;
   bool _loadingConversation = true;
   String? _conversationError;
+  bool _didInitialScroll = false;
+  MessageModel? _replyTo;
+  MessageModel? _editing;
 
   @override
   void initState() {
@@ -48,18 +55,131 @@ class _GroupChatPageState extends ConsumerState<GroupChatPage> {
     final text = _textController.text.trim();
     if (text.isEmpty || _conversationId == null) return;
     _textController.clear();
-    await ref.read(chatRepositoryProvider).sendMessage(_conversationId!, text);
-    _scrollToBottom();
-  }
-
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
+    try {
+      final repository = ref.read(chatRepositoryProvider);
+      if (_editing != null) {
+        await repository.editMessage(_editing!.id, text);
+      } else {
+        await repository.sendMessage(
+          _conversationId!,
+          text,
+          replyToId: _replyTo?.id,
+        );
+        _scrollToBottom(force: true);
+      }
+      if (mounted) {
+        setState(() {
+          _replyTo = null;
+          _editing = null;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      // Give the message back so it isn't lost.
+      _textController.text = text;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to send: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
+  }
+
+  String _senderName(String senderId) {
+    if (senderId == ref.read(chatRepositoryProvider).currentUserId) {
+      return 'You';
+    }
+    return widget.group.members
+            .where((m) => m.id == senderId)
+            .firstOrNull
+            ?.username ??
+        'Unknown';
+  }
+
+  Future<void> _showMessageActions(MessageModel message, bool isMe) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      useSafeArea: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSizes.radiusMedium),
+        ),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.reply),
+              title: const Text('Reply'),
+              onTap: () => Navigator.pop(sheetContext, 'reply'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.copy),
+              title: const Text('Copy'),
+              onTap: () => Navigator.pop(sheetContext, 'copy'),
+            ),
+            if (isMe) ...[
+              ListTile(
+                leading: const Icon(Icons.edit),
+                title: const Text('Edit'),
+                onTap: () => Navigator.pop(sheetContext, 'edit'),
+              ),
+              ListTile(
+                leading: Icon(Icons.delete, color: Colors.red.shade400),
+                title: Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red.shade400),
+                ),
+                onTap: () => Navigator.pop(sheetContext, 'delete'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+
+    switch (action) {
+      case 'copy':
+        await Clipboard.setData(ClipboardData(text: message.body ?? ''));
+      case 'reply':
+        setState(() {
+          _replyTo = message;
+          _editing = null;
+        });
+      case 'edit':
+        setState(() {
+          _editing = message;
+          _replyTo = null;
+          _textController.text = message.body ?? '';
+        });
+      case 'delete':
+        try {
+          await ref.read(chatRepositoryProvider).deleteMessage(message.id);
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to delete: $e'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+    }
+  }
+
+  void _scrollToBottom({bool force = false}) {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    // Don't yank the user down while they're reading history.
+    if (!force && position.maxScrollExtent - position.pixels > 200) return;
+    _scrollController.animateTo(
+      position.maxScrollExtent,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
@@ -81,23 +201,15 @@ class _GroupChatPageState extends ConsumerState<GroupChatPage> {
             TopHeaderWidget(
               onPressed: () => context.pop(),
               title: widget.group.name,
-              trailing: PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                onSelected: (value) {
-                  if (value == 'members') {
-                    context.push(AppRoutes.chatMembers, extra: widget.group);
-                  } else {
-                    // TODO: abc action
-                  }
-                },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'members', child: Text('Members')),
-                  PopupMenuItem(value: 'abc', child: Text('Abc')),
-                ],
+              trailing: IconButton(
+                icon: const Icon(Icons.group_outlined),
+                onPressed: () =>
+                    context.push(AppRoutes.chatMembers, extra: widget.group),
               ),
             ),
 
             Expanded(child: _buildBody(highlight)),
+            _buildComposeContext(highlight),
             _InputBar(
               controller: _textController,
               onSend: _send,
@@ -105,6 +217,62 @@ class _GroupChatPageState extends ConsumerState<GroupChatPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Strip above the input while replying to or editing a message.
+  Widget _buildComposeContext(Color highlight) {
+    final target = _editing ?? _replyTo;
+    if (target == null) return const SizedBox.shrink();
+    final label = _editing != null
+        ? 'Editing message'
+        : 'Replying to ${_senderName(target.senderId)}';
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSizes.m,
+        vertical: AppSizes.s,
+      ),
+      color: Theme.of(context).cardColor,
+      child: Row(
+        children: [
+          Icon(
+            _editing != null ? Icons.edit : Icons.reply,
+            size: 18,
+            color: highlight,
+          ),
+          AppSizes.s.horizontalSpace,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: highlight,
+                  ),
+                ),
+                Text(
+                  target.body ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18),
+            onPressed: () => setState(() {
+              if (_editing != null) _textController.clear();
+              _replyTo = null;
+              _editing = null;
+            }),
+          ),
+        ],
       ),
     );
   }
@@ -122,7 +290,25 @@ class _GroupChatPageState extends ConsumerState<GroupChatPage> {
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (messages) {
         if (messages.isEmpty) return _EmptyChat(groupName: widget.group.name);
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_scrollController.hasClients) return;
+          if (!_didInitialScroll) {
+            _didInitialScroll = true;
+            _scrollController.jumpTo(
+              _scrollController.position.maxScrollExtent,
+            );
+          } else {
+            _scrollToBottom();
+          }
+        });
+        final currentUserId =
+            ref.read(chatRepositoryProvider).currentUserId ?? '';
+        // Live members for sender names/avatars; route snapshot until loaded.
+        final members =
+            ref.watch(groupMembersProvider(widget.group.id)).value ??
+            widget.group.members;
+        final membersById = {for (final m in members) m.id: m};
+        final messagesById = {for (final m in messages) m.id: m};
         return ListView.builder(
           controller: _scrollController,
           padding: EdgeInsets.symmetric(
@@ -132,13 +318,32 @@ class _GroupChatPageState extends ConsumerState<GroupChatPage> {
           itemCount: messages.length,
           itemBuilder: (context, i) {
             final msg = messages[i];
-            final currentUserId =
-                ref.read(chatRepositoryProvider).currentUserId ?? '';
+            final prev = i > 0 ? messages[i - 1] : null;
             final isMe = msg.senderId == currentUserId;
-            return _MessageBubble(
+            final newDay =
+                prev == null ||
+                !_sameDay(prev.createdAt.toLocal(), msg.createdAt.toLocal());
+            final replied = msg.replyToId != null
+                ? messagesById[msg.replyToId]
+                : null;
+            final bubble = _MessageBubble(
               message: msg,
               isMe: isMe,
               highlight: highlight,
+              sender: membersById[msg.senderId],
+              showSender: !isMe && (newDay || prev.senderId != msg.senderId),
+              replied: replied,
+              repliedSender: replied != null
+                  ? _senderName(replied.senderId)
+                  : null,
+              onLongPress: () => _showMessageActions(msg, isMe),
+            );
+            if (!newDay) return bubble;
+            return Column(
+              children: [
+                _DateSeparator(date: msg.createdAt.toLocal()),
+                bubble,
+              ],
             );
           },
         );
@@ -147,72 +352,197 @@ class _GroupChatPageState extends ConsumerState<GroupChatPage> {
   }
 }
 
+bool _sameDay(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+
 class _MessageBubble extends StatelessWidget {
   final MessageModel message;
   final bool isMe;
   final Color highlight;
+  final MemberModel? sender;
+
+  /// Show sender name + avatar (first message of a sender's run).
+  final bool showSender;
+
+  /// The message this one replies to, if loaded.
+  final MessageModel? replied;
+  final String? repliedSender;
+  final VoidCallback? onLongPress;
 
   const _MessageBubble({
     required this.message,
     required this.isMe,
     required this.highlight,
+    this.sender,
+    this.showSender = false,
+    this.replied,
+    this.repliedSender,
+    this.onLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
+    final local = message.createdAt.toLocal();
     final time =
-        '${message.createdAt.hour.toString().padLeft(2, '0')}:${message.createdAt.minute.toString().padLeft(2, '0')}';
+        '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
 
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.only(
-          top: 3.h,
-          bottom: 3.h,
-          left: isMe ? 60.w : 0,
-          right: isMe ? 0 : 60.w,
+    final bubble = Container(
+      padding: EdgeInsets.symmetric(horizontal: AppSizes.m, vertical: AppSizes.s),
+      decoration: BoxDecoration(
+        color: isMe ? highlight : Theme.of(context).cardColor,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(AppSizes.radiusMedium),
+          topRight: Radius.circular(AppSizes.radiusMedium),
+          bottomLeft: Radius.circular(isMe ? AppSizes.radiusMedium : 4.r),
+          bottomRight: Radius.circular(isMe ? 4.r : AppSizes.radiusMedium),
         ),
-        padding: EdgeInsets.symmetric(
-          horizontal: AppSizes.m,
-          vertical: AppSizes.s,
-        ),
-        decoration: BoxDecoration(
-          color: isMe ? highlight : Theme.of(context).cardColor,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(AppSizes.radiusMedium),
-            topRight: Radius.circular(AppSizes.radiusMedium),
-            bottomLeft: Radius.circular(isMe ? AppSizes.radiusMedium : 4.r),
-            bottomRight: Radius.circular(isMe ? 4.r : AppSizes.radiusMedium),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(12),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(12),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: isMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: [
+          if (showSender) ...[
+            Text(
+              sender?.username ?? 'Unknown',
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+                color: highlight,
+              ),
             ),
+            2.verticalSpace,
           ],
+          if (message.hasReply) ...[
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: (isMe ? Colors.white : highlight).withAlpha(30),
+                // No borderRadius: BoxDecoration forbids it with a
+                // non-uniform border.
+                border: Border(
+                  left: BorderSide(
+                    color: isMe ? Colors.white : highlight,
+                    width: 3,
+                  ),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    repliedSender ?? 'Unknown',
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.w600,
+                      color: isMe ? Colors.white : highlight,
+                    ),
+                  ),
+                  Text(
+                    replied?.body ?? 'Message unavailable',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: isMe ? Colors.white70 : Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            4.verticalSpace,
+          ],
+          Text(
+            message.body ?? '',
+            style: TextStyle(fontSize: 14.sp, color: isMe ? Colors.white : null),
+          ),
+          3.verticalSpace,
+          Text(
+            message.isEdited ? '$time · edited' : time,
+            style: TextStyle(
+              fontSize: 10.sp,
+              color: isMe ? Colors.white70 : Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Padding(
+      padding: EdgeInsets.only(
+        top: 3.h,
+        bottom: 3.h,
+        left: isMe ? 60.w : 0,
+        right: isMe ? 0 : 60.w,
+      ),
+      child: GestureDetector(
+        onLongPress: onLongPress,
+        child: isMe
+            ? Align(alignment: Alignment.centerRight, child: bubble)
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (showSender)
+                    Padding(
+                      padding: EdgeInsets.only(right: 6.w),
+                      child: AppNetworkImage(
+                        url: sender?.avatarUrl,
+                        size: 30.w,
+                        borderRadius: BorderRadius.circular(
+                          AppSizes.radiusCircular,
+                        ),
+                      ),
+                    )
+                  else
+                    SizedBox(width: 36.w),
+                  Flexible(child: bubble),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _DateSeparator extends StatelessWidget {
+  final DateTime date;
+  const _DateSeparator({required this.date});
+
+  static const _months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final diff = DateTime(now.year, now.month, now.day)
+        .difference(DateTime(date.year, date.month, date.day))
+        .inDays;
+    final label = diff == 0
+        ? 'Today'
+        : diff == 1
+        ? 'Yesterday'
+        : '${date.day} ${_months[date.month - 1]}'
+              '${date.year == now.year ? '' : ' ${date.year}'}';
+
+    return Center(
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: AppSizes.s),
+        padding: EdgeInsets.symmetric(horizontal: AppSizes.sm, vertical: 4.h),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
         ),
-        child: Column(
-          crossAxisAlignment: isMe
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [
-            Text(
-              message.body ?? '',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: isMe ? Colors.white : null,
-              ),
-            ),
-            3.verticalSpace,
-            Text(
-              time,
-              style: TextStyle(
-                fontSize: 10.sp,
-                color: isMe ? Colors.white70 : Colors.grey,
-              ),
-            ),
-          ],
+        child: Text(
+          label,
+          style: TextStyle(fontSize: 11.sp, color: Colors.grey),
         ),
       ),
     );

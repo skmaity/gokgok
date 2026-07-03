@@ -1,10 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import 'package:gokgok/core/constants/app_assets.dart';
 
-/// Network image with a fallback for null/empty URLs and load errors.
-// ponytail: wraps Image.network (in-memory cache only); swap the body for
-// CachedNetworkImage if avatars re-downloading after app restart becomes a problem.
+/// Network image with disk caching and a fallback for null/empty URLs and
+/// load errors.
 class AppNetworkImage extends StatelessWidget {
   const AppNetworkImage({
     super.key,
@@ -33,7 +33,11 @@ class AppNetworkImage extends StatelessWidget {
 
     Widget image = (url == null || url!.isEmpty)
         ? placeholder
-        : Image.network(url!, fit: fit, errorBuilder: (_, _, _) => placeholder);
+        : CachedNetworkImage(
+            imageUrl: url!,
+            fit: fit,
+            errorWidget: (_, _, _) => placeholder,
+          );
 
     if (size != null) {
       image = SizedBox(width: size, height: size, child: image);
