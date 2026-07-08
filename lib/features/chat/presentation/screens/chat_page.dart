@@ -25,7 +25,7 @@ class ChatPage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        MediaQuery.of(context).viewPadding.top.verticalSpace,
+        SizedBox(height: MediaQuery.paddingOf(context).top),
         TopHeaderWidgetTitleOnly(title: 'Chats', padding: 24.w),
         Expanded(
           child: Padding(
@@ -50,7 +50,10 @@ class ChatPage extends ConsumerWidget {
                     return tb.compareTo(ta);
                   });
                 return ListView.builder(
-                  padding: EdgeInsets.zero,
+                  // Clears the floating bottom nav (parent uses extendBody).
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.paddingOf(context).bottom + AppSizes.m,
+                  ),
                   itemCount: sorted.length,
                   itemBuilder: (context, index) => _GroupTile(
                     group: sorted[index],

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,7 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gokgok/core/routing/app_routes.dart';
 import 'package:gokgok/core/widgets/app_network_image.dart';
-import 'package:gokgok/core/widgets/top_header_widget.dart';
+import 'package:gokgok/core/widgets/glass_header_bar.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
 import 'package:gokgok/features/groups/domain/entities/group_model.dart';
@@ -194,29 +196,32 @@ class _GroupChatPageState extends ConsumerState<GroupChatPage> {
     final highlight = Theme.of(context).extension<AppColors>()!.highlight;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Column(
+      appBar: GlassHeaderBar(
+        onBack: () => context.pop(),
+        title: widget.group.name,
+        trailing: IconButton(
+          icon: const Icon(Icons.group_outlined),
+          onPressed: () =>
+              context.push(AppRoutes.chatMembers, extra: widget.group),
+        ),
+      ),
+      body: Builder(
+        // Body context: Scaffold folds the glass header (extendBodyBehindAppBar)
+        // and input bar (extendBody) heights into MediaQuery.padding here.
+        builder: (bodyContext) => Column(
           children: [
-            TopHeaderWidget(
-              onPressed: () => context.pop(),
-              title: widget.group.name,
-              trailing: IconButton(
-                icon: const Icon(Icons.group_outlined),
-                onPressed: () =>
-                    context.push(AppRoutes.chatMembers, extra: widget.group),
-              ),
-            ),
-
-            Expanded(child: _buildBody(highlight)),
+            Expanded(child: _buildBody(bodyContext, highlight)),
             _buildComposeContext(highlight),
-            _InputBar(
-              controller: _textController,
-              onSend: _send,
-              highlight: highlight,
-            ),
           ],
         ),
+      ),
+      bottomNavigationBar: _InputBar(
+        controller: _textController,
+        onSend: _send,
+        highlight: highlight,
       ),
     );
   }
@@ -277,7 +282,7 @@ class _GroupChatPageState extends ConsumerState<GroupChatPage> {
     );
   }
 
-  Widget _buildBody(Color highlight) {
+  Widget _buildBody(BuildContext context, Color highlight) {
     if (_loadingConversation) {
       return Center(child: CircularProgressIndicator(color: highlight));
     }
@@ -311,9 +316,13 @@ class _GroupChatPageState extends ConsumerState<GroupChatPage> {
         final messagesById = {for (final m in messages) m.id: m};
         return ListView.builder(
           controller: _scrollController,
-          padding: EdgeInsets.symmetric(
-            horizontal: AppSizes.m,
-            vertical: AppSizes.s,
+          // Insets clear the glass header and input bar (already in the body
+          // MediaQuery padding) so messages scroll under both but end visible.
+          padding: EdgeInsets.only(
+            top: MediaQuery.paddingOf(context).top + AppSizes.s,
+            left: AppSizes.m,
+            right: AppSizes.m,
+            bottom: MediaQuery.paddingOf(context).bottom + AppSizes.s,
           ),
           itemCount: messages.length,
           itemBuilder: (context, i) {
@@ -387,7 +396,10 @@ class _MessageBubble extends StatelessWidget {
         '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
 
     final bubble = Container(
-      padding: EdgeInsets.symmetric(horizontal: AppSizes.m, vertical: AppSizes.s),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSizes.m,
+        vertical: AppSizes.s,
+      ),
       decoration: BoxDecoration(
         color: isMe ? highlight : Theme.of(context).cardColor,
         borderRadius: BorderRadius.only(
@@ -461,7 +473,10 @@ class _MessageBubble extends StatelessWidget {
           ],
           Text(
             message.body ?? '',
-            style: TextStyle(fontSize: 14.sp, color: isMe ? Colors.white : null),
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: isMe ? Colors.white : null,
+            ),
           ),
           3.verticalSpace,
           Text(
@@ -515,16 +530,28 @@ class _DateSeparator extends StatelessWidget {
   const _DateSeparator({required this.date});
 
   static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final diff = DateTime(now.year, now.month, now.day)
-        .difference(DateTime(date.year, date.month, date.day))
-        .inDays;
+    final diff = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).difference(DateTime(date.year, date.month, date.day)).inDays;
     final label = diff == 0
         ? 'Today'
         : diff == 1
@@ -567,56 +594,72 @@ class _InputBar extends StatelessWidget {
         AppSizes.m,
         AppSizes.s,
         AppSizes.m,
-        AppSizes.m,
+        MediaQuery.of(context).viewInsets.bottom + AppSizes.m,
       ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(15),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
+      // decoration: BoxDecoration(
+      //   color: Theme.of(context).scaffoldBackgroundColor.withAlpha(100),
+      //   boxShadow: [
+      //     BoxShadow(
+      //       color: Colors.black.withAlpha(15),
+      //       blurRadius: 8,
+      //       offset: const Offset(0, -2),
+      //     ),
+      //   ],
+      // ),
       child: Row(
         children: [
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).extension<AppColors>()!.searchBarBg,
-                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-              ),
-              child: TextField(
-                controller: controller,
-                textCapitalization: TextCapitalization.sentences,
-                maxLines: null,
-                decoration: InputDecoration(
-                  hintText: 'Message...',
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: AppSizes.m,
-                    vertical: AppSizes.sm,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).extension<AppColors>()!.searchBarBg,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                  ),
+                  child: TextField(
+                    controller: controller,
+                    textCapitalization: TextCapitalization.sentences,
+                    maxLines: null,
+                    decoration: InputDecoration(
+                      hintText: 'Message...',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: AppSizes.m,
+                        vertical: AppSizes.sm,
+                      ),
+                    ),
+                    onSubmitted: (_) => onSend(),
                   ),
                 ),
-                onSubmitted: (_) => onSend(),
               ),
             ),
           ),
           AppSizes.s.horizontalSpace,
           GestureDetector(
             onTap: onSend,
-            child: Container(
-              width: 44.w,
-              height: 44.w,
-              decoration: BoxDecoration(
-                color: highlight,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.send_rounded,
-                color: Colors.white,
-                size: AppSizes.iconSizeMedium,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                child: Container(
+                  width: 44.w,
+                  height: 44.w,
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).extension<AppColors>()!.searchBarBg.withAlpha(100),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.send_rounded,
+                    color: Colors.white,
+                    size: AppSizes.iconSizeMedium,
+                  ),
+                ),
               ),
             ),
           ),

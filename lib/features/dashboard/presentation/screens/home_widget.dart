@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:gokgok/core/routing/app_routes.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/widgets/app_network_image.dart';
+import 'package:gokgok/core/widgets/glass_header_bar.dart';
+import 'package:gokgok/core/widgets/glass_pill.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
 import 'package:gokgok/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:gokgok/features/groups/presentation/widgets/empty_state_no_friends_groups.dart';
@@ -37,35 +39,25 @@ class _ActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final highlight = Theme.of(context).extension<AppColors>()!.highlight;
-    final cardBg = Theme.of(context).extension<AppColors>()!.searchBarBg;
 
-    return GestureDetector(
+    final secondaryText = Theme.of(
+      context,
+    ).colorScheme.onSurface.withAlpha(140);
+
+    return GlassPill(
       onTap: onTap,
-      child: Container(
+      child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: AppSizes.m,
-          vertical: AppSizes.s,
+          vertical: AppSizes.sm,
         ),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(20),
-              blurRadius: 8,
-              spreadRadius: 2,
-              offset: Offset(4, 3),
-            ),
-          ],
-        ),
-
         child: Row(
           children: [
             Container(
               padding: EdgeInsets.all(AppSizes.xs),
               decoration: BoxDecoration(
                 color: highlight.withAlpha(30),
-                borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
@@ -80,15 +72,19 @@ class _ActionCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      overflow: TextOverflow.ellipsis,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.sp,
                     ),
                   ),
+                  2.verticalSpace,
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12.sp, color: secondaryText),
                   ),
                 ],
               ),
@@ -101,176 +97,206 @@ class _ActionCard extends StatelessWidget {
 }
 
 class _HomeWidgetState extends ConsumerState<HomeWidget> {
-  // var group =  ref.watch(groupProvider.notifier).
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    TextEditingController searchController = TextEditingController();
     final profile = ref.watch(dashboardProvider).value;
     final avatarUrl = profile?.avatarUrl;
 
     final firstName = (profile?.fullName ?? '').trim().split(' ').first;
 
+    final topInset = MediaQuery.paddingOf(context).top + GlassHeaderBar.height;
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
-          child: Column(
-            children: [
-              MediaQuery.of(context).viewPadding.top.verticalSpace,
-              // header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      context.push(AppRoutes.profile);
-                    },
-                    child: Row(
-                      children: [
-                        AppNetworkImage(
-                          url: avatarUrl,
-                          size: AppSizes.avatarSize,
-                          borderRadius: BorderRadius.circular(
-                            AppSizes.radiusCircular,
+      child: Stack(
+        children: [
+          SingleChildScrollView(
+            // Content starts below the glass header but scrolls under it,
+            // and clears the floating bottom nav (parent uses extendBody).
+            padding: EdgeInsets.only(
+              top: topInset + AppSizes.sm,
+              left: AppSizes.screenPadding,
+              right: AppSizes.screenPadding,
+              bottom: MediaQuery.paddingOf(context).bottom + AppSizes.m,
+            ),
+            child: Column(
+              children: [
+                // body (Search bar)
+                Container(
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(20),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                        offset: Offset(4, 3),
+                      ),
+                    ],
+                    color: Theme.of(
+                      context,
+                    ).extension<AppColors>()!.searchBarBg,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                  ),
+                  child: Row(
+                    children: [
+                      AppSizes.m.horizontalSpace,
+                      Icon(Icons.search_rounded),
+                      AppSizes.s.horizontalSpace,
+
+                      Expanded(
+                        child: TextFormField(
+                          decoration: InputDecoration(
+                            hintText: "find squads or people...",
+                            border: InputBorder.none,
                           ),
+                          textInputAction: TextInputAction.search,
+                          controller: _searchController,
                         ),
-                        if (profile?.fullName != null &&
-                            profile!.fullName!.isNotEmpty)
-                          Padding(
-                            padding: EdgeInsets.only(left: AppSizes.sm),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                firstName,
-                                style: TextStyle(
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.w600,
+                      ),
+                      AppSizes.m.horizontalSpace,
+                    ],
+                  ),
+                ),
+                AppSizes.m.verticalSpace,
+
+                ref
+                    .watch(groupProvider)
+                    .when(
+                      loading: () => const CircularProgressIndicator(),
+                      error: (e, _) => Text('Error: $e'),
+                      data: (groups) => groups.isEmpty
+                          ? EmptyStateNoFriendsGroups()
+                          : Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _ActionCard(
+                                        icon: Icons.add_rounded,
+                                        title: 'new group',
+                                        subtitle: 'start a squad',
+                                        onTap: () =>
+                                            showCreateGroupSheet(context),
+                                      ),
+                                    ),
+                                    AppSizes.sm.horizontalSpace,
+                                    Expanded(
+                                      child: _ActionCard(
+                                        icon: Icons.tag_rounded,
+                                        title: 'join with code',
+                                        subtitle: 'got an invite?',
+                                        onTap: () =>
+                                            showJoinGroupSheet(context),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                AppSizes.m.verticalSpace,
+                                YourGroupsWidget(),
+                              ],
+                            ),
+                    ),
+
+                // Or embed inside your existing Scaffold body
+                // Online Now section
+                // Column(
+                //   crossAxisAlignment: CrossAxisAlignment.start,
+                //   children: [
+                //     Text(
+                //       "Online now",
+                //       style: TextStyle(
+                //         color: Colors.black,
+                //         fontSize: 14.sp,
+                //         fontWeight: FontWeight.w600,
+                //       ),
+                //     ),
+                //     AppSizes.s.verticalSpace,
+                //     OnlineNowList(),
+                //     AppSizes.s.verticalSpace,
+
+                //     Consumer(
+                //       builder: (context, ref, child) {
+                //         final buzzer = ref.watch(buzzerProvider);
+                //         return Text(
+                //           buzzer,
+                //           style: TextStyle(
+                //             color: Colors.black,
+                //             fontSize: 14.sp,
+                //             fontWeight: FontWeight.w600,
+                //           ),
+                //         );
+                //       },
+                //     ),
+                //   ],
+                // ),
+              ],
+            ),
+          ),
+          // Fixed glass header; content scrolls under it.
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SizedBox(
+              height: topInset,
+              child: GlassHeaderBar(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSizes.screenPadding,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: () => context.push(AppRoutes.profile),
+                          child: Row(
+                            children: [
+                              AppNetworkImage(
+                                url: avatarUrl,
+                                size: AppSizes.avatarSize,
+                                borderRadius: BorderRadius.circular(
+                                  AppSizes.radiusCircular,
                                 ),
                               ),
-                            ),
+                              if (profile?.fullName != null &&
+                                  profile!.fullName!.isNotEmpty)
+                                Padding(
+                                  padding: EdgeInsets.only(left: AppSizes.sm),
+                                  child: Text(
+                                    firstName,
+                                    style: TextStyle(
+                                      fontSize: 18.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
+                        ),
+                        Text(
+                          'GokGok',
+                          style: GoogleFonts.lobster(
+                            fontSize: AppSizes.logoMedium,
+                            color: Colors.amber,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  Text(
-                    'GokGok',
-                    style: GoogleFonts.lobster(
-                      fontSize: AppSizes.logoMedium,
-                      color: Colors.amber,
-                    ),
-                  ),
-                ],
-              ),
-
-              AppSizes.m.verticalSpace,
-              // body (Search bar)
-              Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(20),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                      offset: Offset(4, 3),
-                    ),
-                  ],
-                  color: Theme.of(context).extension<AppColors>()!.searchBarBg,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                ),
-                child: Row(
-                  children: [
-                    AppSizes.m.horizontalSpace,
-                    Icon(Icons.search_rounded),
-                    AppSizes.s.horizontalSpace,
-
-                    Expanded(
-                      child: TextFormField(
-                        decoration: InputDecoration(
-                          hintText: "find squads or people...",
-                          border: InputBorder.none,
-                        ),
-                        controller: searchController,
-                      ),
-                    ),
-                    AppSizes.m.horizontalSpace,
-                  ],
                 ),
               ),
-              AppSizes.m.verticalSpace,
-
-              ref
-                  .watch(groupProvider)
-                  .when(
-                    loading: () => const CircularProgressIndicator(),
-                    error: (e, _) => Text('Error: $e'),
-                    data: (groups) => groups.isEmpty
-                        ? EmptyStateNoFriendsGroups()
-                        : Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _ActionCard(
-                                      icon: Icons.add_rounded,
-                                      title: 'new group',
-                                      subtitle: 'start a squad',
-                                      onTap: () =>
-                                          showCreateGroupSheet(context),
-                                    ),
-                                  ),
-                                  AppSizes.s.horizontalSpace,
-                                  Expanded(
-                                    child: _ActionCard(
-                                      icon: Icons.tag_rounded,
-                                      title: 'join with code',
-                                      subtitle: 'got an invite?',
-                                      onTap: () => showJoinGroupSheet(context),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              AppSizes.m.verticalSpace,
-                              YourGroupsWidget(),
-                            ],
-                          ),
-                  ),
-
-              // Or embed inside your existing Scaffold body
-              // Online Now section
-              // Column(
-              //   crossAxisAlignment: CrossAxisAlignment.start,
-              //   children: [
-              //     Text(
-              //       "Online now",
-              //       style: TextStyle(
-              //         color: Colors.black,
-              //         fontSize: 14.sp,
-              //         fontWeight: FontWeight.w600,
-              //       ),
-              //     ),
-              //     AppSizes.s.verticalSpace,
-              //     OnlineNowList(),
-              //     AppSizes.s.verticalSpace,
-
-              //     Consumer(
-              //       builder: (context, ref, child) {
-              //         final buzzer = ref.watch(buzzerProvider);
-              //         return Text(
-              //           buzzer,
-              //           style: TextStyle(
-              //             color: Colors.black,
-              //             fontSize: 14.sp,
-              //             fontWeight: FontWeight.w600,
-              //           ),
-              //         );
-              //       },
-              //     ),
-              //   ],
-              // ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

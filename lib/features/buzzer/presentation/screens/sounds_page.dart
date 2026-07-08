@@ -9,7 +9,7 @@ class SoundsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        MediaQuery.of(context).viewPadding.top.verticalSpace,
+        SizedBox(height: MediaQuery.paddingOf(context).top),
 
         TopHeaderWidgetTitleOnly(title: 'Sounds', padding: 24.w),
       ],

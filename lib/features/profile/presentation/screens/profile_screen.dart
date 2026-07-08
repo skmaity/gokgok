@@ -138,13 +138,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           }
           return Column(
             children: [
-              MediaQuery.of(context).padding.top.verticalSpace,
+              SizedBox(height: MediaQuery.paddingOf(context).top),
               TopHeaderWidget(title: 'Profile', onPressed: () => context.pop()),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppSizes.screenPadding,
-                    vertical: AppSizes.l,
+                  padding: EdgeInsets.only(
+                    left: AppSizes.screenPadding,
+                    right: AppSizes.screenPadding,
+                    top: AppSizes.l,
+                    bottom: MediaQuery.paddingOf(context).bottom + AppSizes.l,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

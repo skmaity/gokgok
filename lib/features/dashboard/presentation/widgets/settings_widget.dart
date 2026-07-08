@@ -19,7 +19,7 @@ class SettingsWidget extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          MediaQuery.of(context).viewPadding.top.verticalSpace,
+          SizedBox(height: MediaQuery.paddingOf(context).top),
 
           TopHeaderWidgetTitleOnly(title: 'Settings', padding: 24.w),
           AppSizes.sm.verticalSpace,
@@ -79,7 +79,8 @@ class SettingsWidget extends ConsumerWidget {
             },
           ),
 
-          200.verticalSpace,
+          // Clears the floating bottom nav (parent uses extendBody).
+          SizedBox(height: MediaQuery.paddingOf(context).bottom + AppSizes.m),
         ],
       ),
     );
