@@ -134,7 +134,7 @@ class _JoinGroupBottomSheetState extends ConsumerState<_JoinGroupBottomSheet> {
             ),
           ],
           AppSizes.l.verticalSpace,
-          CommounSubmitBtn(
+          SubmitButton(
             label: 'Join Group',
             onPressed: _submit,
             isLoading: _isLoading,

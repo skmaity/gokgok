@@ -239,7 +239,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         readOnly: true,
                       ),
                       AppSizes.xxl.verticalSpace,
-                      CommounSubmitBtn(
+                      SubmitButton(
                         label: 'Save Changes',
                         onPressed: _saveChanges,
                         isLoading: _isSaving,
@@ -355,4 +355,3 @@ class _ProfileField extends StatelessWidget {
     );
   }
 }
-

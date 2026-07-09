@@ -34,7 +34,7 @@ class _EmptyStateNoFriendsGroupsState
           textAlign: TextAlign.center,
         ),
         AppSizes.l.verticalSpace,
-        CommounSubmitBtn(
+        SubmitButton(
           label: 'Join Group',
           onPressed: () => showJoinGroupSheet(context),
         ),

@@ -7,6 +7,7 @@ import 'package:gokgok/core/widgets/top_header_widget.dart';
 import 'package:gokgok/core/constants/app_assets.dart';
 import 'package:gokgok/core/theme/app_colors.dart';
 import 'package:gokgok/core/theme/app_sizes.dart';
+import 'package:gokgok/core/widgets/submit_button.dart';
 import 'package:gokgok/features/auth/presentation/providers/auth_provider.dart';
 import 'package:gokgok/features/auth/presentation/widgets/login_text_field.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -152,32 +153,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                         obscureText: true,
                       ),
                       AppSizes.xxl.verticalSpace,
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          overlayColor: Colors.white,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).extension<AppColors>()!.highlight,
-                          shape: ContinuousRectangleBorder(
-                            borderRadius: BorderRadiusGeometry.circular(12.r),
-                          ),
-                        ),
-                        onPressed: isLoading ? null : _submitSignUp,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                isLoading ? "Submitting..." : "Submit",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16.sp,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      SubmitButton(
+                        label: "Submit",
+                        isLoading: isLoading,
+                        onPressed: _submitSignUp,
                       ),
                       AppSizes.xxl.verticalSpace,
 

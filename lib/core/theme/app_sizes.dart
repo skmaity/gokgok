@@ -36,4 +36,7 @@ class AppSizes {
   static double get radiusLarge => 32.r;
   static double get radiusCircular => 100.r;
   static double get radiusFull => 200.r;
+
+  // others
+  static const double gestureNavThreshold = 30;
 }

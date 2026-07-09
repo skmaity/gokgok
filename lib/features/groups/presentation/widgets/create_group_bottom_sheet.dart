@@ -136,7 +136,7 @@ class _CreateGroupBottomSheetState
             ),
           ],
           AppSizes.l.verticalSpace,
-          CommounSubmitBtn(
+          SubmitButton(
             label: 'Create Group',
             onPressed: _submit,
             isLoading: _isLoading,
