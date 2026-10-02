@@ -20,7 +20,7 @@ One special feature that makes my app different from others is the **buzzer** fe
 - [x] dashboard / home
 - [ ] voice call
 - [ ] video call
-- [~] buzzer function — plays a local buzzer sound; still need: sound selection from list, import personal sound, and remote buzz to a targeted user/group (ring loud + vibrate)
+- [~] buzzer function — sounds page lists the admin-managed catalog (`buzzer_sounds`) with preview + select, and the buzzer button fires the picked sound (falls back to the bundled asset); still need: import personal sound, remote buzz to a targeted user/group (ring loud + vibrate), and persisting the pick across restarts
 
 # chat feature gaps (audit 2026-07-03)
 

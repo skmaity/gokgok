@@ -15,6 +15,15 @@ class AudioService {
     await _player.play();
   }
 
+  /// Plays a remote URL from the start at the given [volume] (0.0–1.0).
+  Future<void> playUrl(String url, {double volume = 1.0}) async {
+    await _player.stop();
+    await _player.setUrl(url);
+    await _player.setVolume(volume);
+    await _player.seek(Duration.zero);
+    await _player.play();
+  }
+
   void dispose() => _player.dispose();
 }
 

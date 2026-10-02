@@ -40,7 +40,15 @@ final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     refreshListenable: refresh,
     redirect: (context, state) {
-      final isLoggedIn = client.auth.currentUser != null;
+      final session = client.auth.currentSession;
+      // A dead session (refresh token also expired) is still non-null on disk;
+      // treat it as logged-out and purge it so realtime never subscribes with
+      // an expired JWT. signOut() flips currentSession to null → next redirect
+      // won't re-enter this branch, so no loop.
+      if (session != null && session.isExpired) {
+        client.auth.signOut();
+      }
+      final isLoggedIn = session != null && !session.isExpired;
       final location = state.matchedLocation;
       final isAuthRoute =
           location == AppRoutes.login || location == AppRoutes.signup;
